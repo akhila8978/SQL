@@ -1,0 +1,26 @@
+create database Company
+
+
+---Alter---
+
+alter database Test1 modify name="Company";
+
+Use Company;
+
+create Table Employees(
+EmployeeID int Primary key Not NUll,
+EmployeeName varchar(50) Not null,
+Phone Int not null,
+DepId int not null)
+
+
+
+---Rename---
+
+EXEC sp_rename 'tableEmployees', 'Employee'
+
+----DROP----
+
+DROP TABLE employees;
+
+---Data Types---
