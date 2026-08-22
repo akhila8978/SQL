@@ -24,3 +24,89 @@ EXEC sp_rename 'tableEmployees', 'Employee'
 DROP TABLE employees;
 
 ---Data Types---
+
+### Data Types
+
+| Data Type    | From           | To                                                                       | Category |
+| ------------ | -------------- | ------------------------------------------------------------------------ | -------- |
+| **Int**      | -2,147,483,648 | 2,147,483,647                                                            | Number   |
+| **Bit**      | 0  False / No / Off            | 1       True / Yes / On                                                              
+| **Decimal**  | -10^38 + 1     | 10^38 - 1                                                                | Number   
+| **Datetime** | Jan 1, 1753    | Dec 31, 9999                                                             | Date     |
+| **Char**     | Char           | Maximum length of 8,000 characters (Fixed-length non-Unicode characters) | String   |
+| **Varchar**  | Varchar        | Maximum length of 8,000 characters (Variable-length non-Unicode data)    | String   |
+| **Binary**   | —              | Maximum length of 8,000 bytes (Fixed-length binary data)                 | —        |
+
+
+----Constaints---
+
+### for accuracy and relaibility of data in database
+
+1 Not Null : Ensures that colums cannot have nullvalue
+
+create Table Employees(
+EmployeeID int Primary key Not NUll,
+EmployeeName varchar(50) Not null,
+Phone Int Not null,
+DepId int Not null)
+
+-----
+2 Default Constaint : Default value for a column when None is specified
+create Table Employees(
+EmployeeID int Primary key Not NUll,
+EmployeeName varchar(50) Not null,
+Phone Int Not null,
+DepId int Not null
+Salary Decimal(10,2) Default 3000.00)
+
+----
+3 Primary Key: Uniquely identifiies each row/records in DB
+it should be unique and not null
+
+create Table Employees(
+EmployeeID int Primary key Not NUll,
+EmployeeName varchar(50) Not null,
+Phone Int Not null,
+DepId int Not null
+Salary Decimal(10,2) Default 3000.00)
+
+-----
+4 Foreign Key: Refernce key  primary (Uniquly identifies a row/record in any other database table)
+primary key of one table inserted in another table
+
+create Table Employees(
+EmployeeID int Primary key Not NUll,
+EmployeeName varchar(50) Not null,
+Phone Int Not null,
+DepId int Foreign key refernces
+tableDepartmnets(DepId) not null,
+)
+create Table tableEmployees(
+DepId int primary akey not null,
+DepartmentName varchar(50) Not null)
+
+5 Unique : Ensures that all values in coluumns are different 
+
+create Table Employees(
+EmployeeID int Primary key Not NUll,
+EmployeeName varchar(50) Not null,
+Phone Int unique,
+DepId int Foreign key refernces
+tableDepartmnets(DepId) not null)
+
+--- to make unique constarint---
+
+alter table employees add constraint U_phone unique(phone)
+
+
+6 Check Cnstraint:ensures all values in colums satisfy certain conditions
+
+create Table Employees(
+EmployeeID int Primary key Not NUll,
+EmployeeName varchar(50) Not null,
+Phone Int not null,
+Age int not null check (age>=18),
+depid int not null,)
+
+
+
