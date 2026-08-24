@@ -1,0 +1,11 @@
+----Select ----
+
+## for retrieving all the data---
+
+select * from employees ;
+
+
+## for retrieving top value---
+
+select Top 2 employeeName,EmployeeId from employees;
+
