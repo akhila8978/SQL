@@ -1,1 +1,16 @@
+use  Company;
+create table Employees
+(id int,
+name varchar(50),
+DeptID int,
+DeptName Varchar(40))
+
+INSERT INTO Employees (id, name, DeptID, DeptName)
+VALUES (100, 'Akhila', 1, 'IT');
+
+
+Update tableEmployees set EmployeeName ="Akhila" where id = 100;
+
+delete tableEmployee where employeeId ='1001';
+
 
