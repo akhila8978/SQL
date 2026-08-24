@@ -1,0 +1,39 @@
+
+----Distinct , Top, ORDER BY, LIMIT and OFFSET -----
+
+
+id	title	director	year	length_minutes
+1	Toy Story 2	John Lasseter	1999	93
+2	A Bug's Life	John Lasseter	1998	95
+3	The Incredibles	Brad Bird	2004	116
+4	Toy Story	John Lasseter	1995	81
+5	Monsters University	Dan Scanlon	2013	110
+6	Toy Story 3	Lee Unkrich	2010	103
+7	Up	Pete Docter	2009	101
+8	Cars 2	John Lasseter	2011	120
+9	WALL-E	Andrew Stanton	2008	104
+10	Brave	Brenda Chapman	2012	102
+
+
+1 List all directors of Pixar movies (alphabetically), without duplicates
+
+SELECT DISTINCT director FROM movies
+ORDER BY director ASC;
+
+2 List the last four Pixar movies released (ordered from most recent to least)
+
+SELECT title, year FROM movies
+ORDER BY year DESC
+LIMIT 4;
+
+3 List the first five Pixar movies sorted alphabetically
+
+SELECT title FROM movies
+ORDER BY title ASC
+LIMIT 5;
+
+4 List the next five Pixar movies sorted alphabetically
+
+SELECT title FROM movies
+ORDER BY title ASC
+LIMIT 5 OFFSET 5;
