@@ -66,3 +66,9 @@ select * from dbo.orders order by order_date asc
 # Excecution_order:
  from >>> where>>> group by>>> having  >>> Distinct >>> order by >> Top 
 
+---static values---
+
+select id, first_name, 'new_customer' as customer_typr from dbo.customers
+
+
+
