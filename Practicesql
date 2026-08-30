@@ -1,0 +1,68 @@
+
+select * from dbo.customers;
+
+select *from dbo.orders;
+
+select id,country from dbo.customers;
+
+select id, country,score from dbo.customers;
+----Where----
+
+select * from dbo.customers where score != 0;
+
+select * from dbo.customers where country = 'Germany';
+
+select first_name, country from dbo.customers where country ='germany'
+
+----order by----
+
+---lowest score first---
+select* from dbo.customers order by score asc;
+
+----Highest score first--
+select* from dbo.customers order by score desc;
+
+---Nested sorted by----
+select * from dbo.customers order by country asc , score desc
+
+---Group By----
+
+select first_name,country,sum(score) as total from dbo.customers group by country, first_name;
+
+select country,sum(score)as total_score,count(id) as no_customers from dbo.customers  group by country;
+
+-----Having----
+
+select country,sum(score) as Total_score from dbo.customers group by country having sum(score)> 800;
+
+select country,sum(score) as Total_score from dbo.customers where score >400 group by country having sum(score)> 800;
+
+select country, avg(score) as Average  from dbo.customers where score!=0 group by country;
+
+select country, avg(score) as Average  from dbo.customers where score!=0 group by country having avg(score) >430;
+
+--Distinct---
+
+select Distinct country from dbo.customers
+
+-----Top-----
+
+select Top 3 country , id from dbo.customers;
+select Top 3*  from dbo.customers
+
+select Top 3 * from dbo.customers order by score desc;
+
+select Top 3 * from dbo.customers order by score asc;
+
+
+select * from dbo.orders order by order_date asc
+
+
+
+----Excecution  order vs coding orders ---
+
+# coding_order : select >> distinct >> top >>> aggregation >>> from >> where >>> group by >>> having >>> order by
+
+# Excecution_order:
+ from >>> where>>> group by>>> having  >>> Distinct >>> order by >> Top 
+
