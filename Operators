@@ -9,3 +9,79 @@ Range Operator : Between
 Membership Operator : IN NOT IN
 
 Search Operator Like
+
+
+Operators
+
+comparison operator : = <> != > >= < <=
+
+Logical operator : AND OR NOT
+
+Range Operator : Between 
+
+Membership Operator : IN NOT IN
+
+Search Operator Like
+
+
+comparison operator : = <> != > >= < <=
+
+Condition: Expression Operator Expression
+
+select * from customers where country = 'germany'
+select * from customers where country != 'germany'
+
+select * from Customers where score >500;
+
+select * from Customers where score >=500;
+
+select * from Customers where score < 500;
+
+select * from Customers where score <=500;
+
+---Logical Operator--- And Or NOt BETWEEN
+
+select * from customers where country ='USA' and Score >500 ;
+select * from customers where country ='USA' or Score >500 ;
+select * from customers where  Score >= 500 ;
+
+select * from customers where NOT Score <  500 ;
+
+
+--BETWEEN-- BOUNDARIES ARE INCLUSIVE 
+
+
+SELECT * from customers where score between 100 and 500 ;
+
+select * from customers where score >= 100 AND  score <=500
+
+
+---in and not in---
+
+
+
+select * from customers where country ='Germany' or country ='USA';
+
+select * from customers where country in ('Germany','USA');
+
+---Like---
+
+% anything (0, 1, more)  m%
+, _exact 1 M_RIA
+
+select * from customers where first_name like 'M%'
+
+select * from customers where first_name like '%n'
+
+select * from customers where first_name like '__r%'
+
+
+
+
+
+
+
+
+
+
+
