@@ -1,0 +1,11 @@
+Operators
+
+comparison operator : = <> != > >= < <=
+
+Logical operator : AND OR NOT
+
+Range Operator : Between 
+
+Membership Operator : IN NOT IN
+
+Search Operator Like
