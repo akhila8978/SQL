@@ -190,7 +190,7 @@ LEFT JOIN Buildings AS B
     ON E.building = B.building_name
 WHERE B.building_name IS NULL;
 
-2 Find the names of the buildings that hold no employees ✓
+2 Find the names of the buildings that hold no employees 
 
 
 SELECT DISTINCT building_name
@@ -198,5 +198,38 @@ FROM buildings
   LEFT JOIN employees
     ON building_name = building
 WHERE role IS NULL;
+
+
+--- left anti join : returns rows from left that has no match with right
+
+select * from customers As c  left join orders as o on c.id = o.customer_id where o.customer_id is null;
+
+---Right anti join -----: return rows from right that has no matching with left table 
+
+select * from customers as c right join orders as o on c.id = o.customer_id where c.id is  null
+
+--using left join
+select * from orders  As o left join customers  as c on c.id = o.customer_id where c.id is null;
+
+
+---full anti join---
+return  only rows that dont match in either of tables
+
+select * from  orders as o Full join Customers as c on  c.id = o.customer_id 
+
+
+---cross joins----
+
+combines Every row from left with every row  from right 
+all possible combinations---cartesian join---
+
+select * from  Customers cross Join orders ;
+
+
+
+
+
+
+
 
 
