@@ -1,0 +1,42 @@
+---set operator ----In  order to combine the 2 tables based on columns we will use set operators 
+
+# Rules :
+
+1 order by can be used only once at the end of column
+2 2 tables should have same no of columns
+3 2 tables should have mathung data types
+4 same order of columns
+5 first query control all the aliases and table names 
+6 mapping correct columns even though we dont get error 
+
+---union---
+# return all distinct rows from both queries duplicates will be removed
+
+combine data from employees and customers
+
+select * from sales.customers
+
+select * from sales.employees
+
+select FirstName, Lastname from sales.customers Union select firstname , lastname from sales.Employees
+
+
+----union all---
+
+# return all the rows from both queries including duplicates
+faster than union 
+
+select * from sales.customers
+
+select * from sales.employees
+
+select FirstName, Lastname from sales.customers Union all select firstname , lastname from sales.Employees
+
+
+
+
+
+
+
+
+
