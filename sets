@@ -33,6 +33,89 @@ select * from sales.employees
 select FirstName, Lastname from sales.customers Union all select firstname , lastname from sales.Employees
 
 
+----Except---(Minus)
+
+returns all distinct rows from first query that are not found in seccond query
+
+select Firstname, Lastname from sales.Employees Except select Firstname,Lastname from sales.customers
+
+select Firstname, Lastname from sales.Customers except select Firstname,Lastname from sales.Employees
+
+-----Intersect------
+
+Return only  the common rows in both tables
+
+select Firstname, Lastname from sales.Employees Intersect select Firstname,Lastname from sales.customers
+
+----Use case---
+
+combine orders , ordersArchieve
+
+select [OrderID]
+      ,[ProductID]
+      ,[CustomerID]
+      ,[SalesPersonID]
+      ,[OrderDate]
+      ,[ShipDate]
+      ,[OrderStatus]
+      ,[ShipAddress]
+      ,[BillAddress]
+      ,[Quantity]
+      ,[Sales]
+      ,[CreationTime] from sales.orders
+union
+select [OrderID]
+      ,[ProductID]
+      ,[CustomerID]
+      ,[SalesPersonID]
+      ,[OrderDate]
+      ,[ShipDate]
+      ,[OrderStatus]
+      ,[ShipAddress]
+      ,[BillAddress]
+      ,[Quantity]
+      ,[Sales]
+      ,[CreationTime]
+  FROM sales.ordersArchive;
+
+
+  select'Orders' as sourcetbale, [OrderID]
+      ,[ProductID]
+      ,[CustomerID]
+      ,[SalesPersonID]
+      ,[OrderDate]
+      ,[ShipDate]
+      ,[OrderStatus]
+      ,[ShipAddress]
+      ,[BillAddress]
+      ,[Quantity]
+      ,[Sales]
+      ,[CreationTime] from sales.orders
+union
+select 'Orders Archieve' as sourcetable ,[OrderID]
+      ,[ProductID]
+      ,[CustomerID]
+      ,[SalesPersonID]
+      ,[OrderDate]
+      ,[ShipDate]
+      ,[OrderStatus]
+      ,[ShipAddress]
+      ,[BillAddress]
+      ,[Quantity]
+      ,[Sales]
+      ,[CreationTime]
+  FROM sales.ordersArchive;
+
+
+  ----Delta Detection usimg except ---
+
+identifying the differences or changes(delta) between two batches  of data
+
+--- for identifying changes---
+
+
+
+
 
 
 
