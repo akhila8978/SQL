@@ -3,7 +3,57 @@ for data transformation, analyze, manipulate and clean data
 
 types : 1 single row functions : input single value---> functions ----> single value output
 String functions , numeric, DATE & Time , null 
-      : 2 multi row functions  : input multiple values ----> function  ---> single output
-  Window fuinctions,aggregate functions.
       
-      Nested functions: Input of one function is output for the next function
+: 2 multi row functions  : input multiple values ----> function  ---> single output
+  Window fuinctions,aggregate functions.
+
+Nested functions: Input of one function is output for the next function
+
+String FUnctions:
+
+MANipulation: concat, upper,Lower, Trim,Replace.
+Caluculation: Len 
+String Extraction : Left Right,Substring
+
+---> Concat:
+
+select first_name,country,concat(first_name,country) as name_country
+from dbo.customers;
+
+------> Upper: select first_name,country,concat(first_name,country) as name_country, Upper(First_name) as Upper_name
+from dbo.customers; 
+
+-------> Lower:select first_name,country,concat(first_name,country) as name_country, Lower(First_name) as low_name
+from dbo.customers;
+
+--------> Trim: removes leading and trailing spaces
+
+select first_name From customers where first_name!= Trim(first_name)
+
+--------- > Len:
+select first_name, len(first_name) as len_name from customers;
+
+
+-----------> Replace:not only replace but also remove
+
+select '123-456-7890', replace('123-456-7890', '-','/') as clean_phone
+
+select 'report.txt', Replace('report.txt','.txt','.csv') as new_filename;
+
+--left(value,Nr of character), Right(value,nr of characters)--
+
+select first_name,Left(Trim(first_name),2) first_2_char,Right(first_name,2) last_2_char from customers;
+
+
+---Substring---
+
+substring(value,start,length)
+
+SElect first_name,SUBSTRING(first_name,2,4) as sub_name from customers
+
+------> Round , ABS-----< 
+
+select 3.156, round(3.156,2) as round_2
+select -10, abs(10),abs(-10) 
+
+
