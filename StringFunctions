@@ -1,0 +1,7 @@
+---String Functions---
+for data transformation, analyze, manipulate and clean data
+
+types : 1 single row functions : input single value---> functions ----> single value output
+      : 2 multi row functions  : input multiple values ----> function  ---> single output
+      
+      Nested functions: Input of one function is output for the next function
