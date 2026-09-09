@@ -168,6 +168,28 @@ eomonth ------ date
 
 
 
+formatting and convert() cast() ---for changing data types
+
+format(value, format[,culture]):
+
+Format(orderdate,'dd/MM/yyyy')
+
+select orderid,creationTime, Format(creationTime,'dd')dd, format(creationTime,'DDD')ddd,
+format(creationTime,'dddd') dddd from sales.orders
+
+Day Wed jan Q1 2025 12:34:56 PM
+
+select Orderid,creationTime,'Day '  + format(creationTime,'ddd  MMM ') +' Q' + Datename(quarter,creationTime) + ' ' +  format(creationTime, 'YYYY hh:mm:ss tt') as customerFormat from sales.orders
+
+
+getdate()
+
+
+convert:  default style is 0 
+convert(data_type,value[style])
+convert(Int, '124')
+convert(varchar, orderdate,'34')
+
 
 
 
