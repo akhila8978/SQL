@@ -92,3 +92,23 @@ select * from Sales.Orders
  EOMONTH
 
 
+select Orderid,creationtime, YEAR(creationtime) year, month(creationtime) month,day(creationtime) day from sales.orders
+
+DAY()
+Month()
+year()
+
+datepart(part,date)
+date(month,orderdate) or date(mm,'2025-08-20')
+
+select Orderid,creationtime, datepart(year,creationtime) year_dp,
+datepart(month,creationtime) month_dp,datepart(day,creationtime) day_dp,datepart(hour,creationtime) Hour_dp,datepart(quarter,creationtime) quarter_dp,datepart(week,creationtime) week_dp, YEAR(creationtime) year, month(creationtime) month,day(creationtime) day from sales.orders
+
+
+
+
+
+
+
+
+
