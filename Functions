@@ -104,6 +104,67 @@ date(month,orderdate) or date(mm,'2025-08-20')
 select Orderid,creationtime, datepart(year,creationtime) year_dp,
 datepart(month,creationtime) month_dp,datepart(day,creationtime) day_dp,datepart(hour,creationtime) Hour_dp,datepart(quarter,creationtime) quarter_dp,datepart(week,creationtime) week_dp, YEAR(creationtime) year, month(creationtime) month,day(creationtime) day from sales.orders
 
+---Datename---
+Datename(part,date)
+
+select Orderid,creationtime, Datename(month,creationtime) as D_Name,Datename(Weekday, creationtime)weekday_dn,datename(day,creationtime) day_dn,datepart(year,creationtime) year_dp,
+datepart(month,creationtime) month_dp,datepart(day,creationtime) day_dp,datepart(hour,creationtime) Hour_dp,datepart(quarter,creationtime) quarter_dp,datepart(week,creationtime) week_dp, YEAR(creationtime) year, month(creationtime) month,day(creationtime) day
+from sales.orders
+
+
+DateTrunc(part,date) keep the required detail aprt as it is and other part will be reset to 00000
+
+Day part reset 01 and datepart reset to 00
+
+select Orderid,creationtime, Datetrunc(minute,creationtime) as minute_dt,datetrunc(day, creationtime) day_dt, Datetrunc(year,creationtime) year_dt,Datename(month,creationtime) as D_Name,Datename(Weekday, creationtime)weekday_dn,datename(day,creationtime) day_dn,datepart(year,creationtime) year_dp,
+datepart(month,creationtime) month_dp,datepart(day,creationtime) day_dp,datepart(hour,creationtime) Hour_dp,datepart(quarter,creationtime) quarter_dp,datepart(week,creationtime) week_dp, YEAR(creationtime) year, month(creationtime) month,day(creationtime) day
+from sales.orders
+
+
+select dateTrunc(year,creationtime),count(*) from sales.orders group by dateTrunc(year,creationtime);
+select dateTrunc(Month,creationtime),count(*) from sales.orders group by dateTrunc(Month,creationtime);
+
+Eomonth() --last day of month output is date
+
+Eomonth(Date)
+
+select orderid,creationtime,eomonth(creationtime) endofmonth from sales.orders
+
+----first day of month----y 
+
+select orderid,creationtime,eomonth(creationtime) endofmonth, cast(dateTrunc(month,creationtime)as date) as startofmonth from sales.orders
+
+
+
+usecases :
+
+for reports if we want to filter out order placed in the partickular year or month
+
+select year(orderdate) as sortbyyear,month(orderdate),count(*) nrorders from sales.orders group by year(orderdate),month(orderDate);
+
+---for getting name of month----
+select Datename(month, orderDate) as orderDate,count(*) Nroforders from sales.orders group by Datename(month,orderdate)
+
+---orders placed in feb month---
+
+select * from sales.orders where month(orderdate)=2
+
+----Datatypes of outputs---
+
+datepart ---int
+datename ---string
+datetrunc----datetime
+eomonth ------ date
+
+                  which part
+                      
+                      |
+          day, month             year         otherparts
+                |                   year()        datepart()
+        Numeric    full name
+        day()        datename()
+        month()
+
 
 
 
