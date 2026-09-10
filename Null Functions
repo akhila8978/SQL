@@ -45,6 +45,49 @@ select customerid,score from Sales.customers order by score
 select customerid,score,coalesce(score,99999), case when score is null then 1 else 0  end flag from Sales.customers order by coalesce(score,99999)
 
 
+--- null if----
+
+nullif(value1,value2)
+
+nullif(shipping_Address,'Unknown')
+
+nullif(shipping_address, Billing_address)
+nullif(originalprice, discountprice)
+
+-----usecase----
+
+dividing by zero
+
+select orderid,sales,quantity,sales/nullif(quantity,0) as price from sales.orders
+
+
+----is notnull--- return true if value is null otherwise it return false.
+Value is null , value is not null
+
+
+----usecase----
+
+identify customers who have no scores
+
+select * from sales.customers where score is null
+
+identify customers who have scores
+
+select * from sales.customers where score is not null
+
+----Handling null values----
+1 only  use nulls and empty strings but avoid blank spaces
+2 only use nulls and avoid empotystrings abd balnbksopaces
+3 only use default value unknown and avooid using nulls, empty strings and blankspaces 
+
+
+
+
+
+
+
+
+
 
 
 
