@@ -204,3 +204,44 @@ convert : any type to anytype   ----> formats only Datetime
 Format : anytype ---> Only string   ----> Formates date & time numbers
 
 
+----DATE ADD----
+for adding or substract DATE
+
+Dateadd(part,interval,date)
+DateADd(year,2,orderdate)
+DateADD(month, -4, orderdate)
+
+select orderid, Orderdate, dateadd(year, 2, orderdate) as orderrdate, DAteadd(month, 3, orderdate) Threeemonthslater,Dateadd(day,-10, orderdate) from sales.orders
+
+
+-----Date DIFF----
+DateDiff(part, start_date, end_date)
+DateDiff(year, orderdate, shipdate)
+
+----caluculating age)
+select * from sales.employees;
+select Employeeid,BirthDate,DateDIff(year, Birthdate, getdate())age from sales.employees;
+
+----average Shipping duration----
+
+select orderid, orderdate, shipdate from sales.orders
+
+
+select month(orderdate)orderdate,Avg(datediff(day,orderdate, shipdate))AS avgdaysship from sALES.ORDERS group by month(orderdate);
+
+----Time gap analysis-----
+
+select orderid,orderdate currentorderdate, lag(orderdate) over (order by orderdate) previousorderdate, datediff(day,Lag(orderdate) over(order by orderdate,orderdate), orderdate)nrofdays from sales.orders
+
+
+----isdate()-----
+
+isdate('2025-04-23')
+
+select isdate('123') datecheck
+select isdate('2023-09-23') datecheck
+
+
+
+
+
