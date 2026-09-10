@@ -192,6 +192,15 @@ convert(varchar, orderdate,'34')
 
 
 
+cast(value as data_type)
 
+cast('123', as INT) as 
+
+select cast('123' as INT) as STRING_INT,cast(123 as varchar) as intstring,
+cast('2025-02-23' as DATE) as stringDate, cast(creationtime as DATE) DAteTime from sales.orders
+
+casting: Used to convert any type to anytype and no formatting
+convert : any type to anytype   ----> formats only Datetime
+Format : anytype ---> Only string   ----> Formates date & time numbers
 
 
