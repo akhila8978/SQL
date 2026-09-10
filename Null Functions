@@ -1,0 +1,56 @@
+-----Nulls---
+---nulls means nothing unknown and not equlas to anything(null or zero, not empty string, not blankspace)---
+
+isnull(value, replacement_value)
+
+isnull(shipping_adrress,'Unknown')
+
+isnull(shipping_address, billing_address)
+
+----Coalesce----
+ to return first non-values form list
+
+coalesce(value1,value2,value3)
+coalesce(shippingaddress, billingaddress,N/A)
+
+isnull : limited to 2 values , fast  ----> sql server (isnull),oracle NVL,Mysql -ifnull
+
+coalesce : unilimited, slow (available in all dbs)
+
+
+----usecase----
+
+--handlinmg null with aggregations---
+
+1 incase of calculating avg we will get errros
+
+select customerid,score,avg(score) over() avgscore, avg(coalesce(score,0)) over() avgscore2 from sales.customers 
+
+---Display the fullname of cutomers in single feild by adding fist and lastnames and 10 bonus points for each customer score
+
+select customerid,firstname,Lastname,Firstname + ' ' + coalesce(Lastname,' ') as Fullname,score,coalesce(score,0)+10 scorewithbonus from sales.customers
+
+
+---handling null with joins----
+
+select a.year, a.type,b.sales from table1 as a join table2 as b on a.year =b.year and isnull(a.type, '') == Isnull(b.type, '')
+
+------sorting data----
+
+
+sorting customers form lowest to highest scores with nulls appearing last
+
+select customerid,score from Sales.customers order by score 
+
+select customerid,score,coalesce(score,99999), case when score is null then 1 else 0  end flag from Sales.customers order by coalesce(score,99999)
+
+
+
+
+
+
+
+
+
+
+
