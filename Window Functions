@@ -1,0 +1,35 @@
+
+aggregate functions: sum, avg,count, min, max  --- input is multiple values and output is single value
+
+select count(*) as total_orders, sum(sales) as total_sales,avg(sales)as avg_sales,min(sales) as lowest_sales, max(sales) as high_sales   from sales.orders
+
+---window functions---
+
+perform calculations like aggregations on specific subset of data without losing the level of details of row
+
+group by : return a single row for each group changes the granularity
+ used for simple aggregations(count,sum,avg,min,max) 
+ used for simple data analysis
+
+window: returns a result for each row the granularity stays the same 
+ used for aggragtions + keep details(count,sum,avg,min,max)
+  rank functions: Row_number,rank,denserank,cum_dist,percent_rank,Ntile
+  analytics functions:lead,lag,firstvalue,last value
+  used for advanced data analysis
+
+ 
+--- total sales across all orders---
+select sum(sales) total_sales from sales.orders
+
+-- total sales across all orders for each product--
+select productid, sum(sales) total_sales from sales.orders group by productid 
+
+---total sales across all orders for each product additionally provide details (orderid, orderdate)---
+
+select orderid,orderdate, productid, sum(sales) total_sales from sales.orders group by productid, Orderid,OrderDate,productid
+
+select orderid,orderdate, productid, sum(sales) over(partition by productid) totalsalesbyproducts from sales.orders
+
+---Window function syntax---
+window functions f(x) =over( partition + order by +frame)
+avg(sales) over(partition by 
