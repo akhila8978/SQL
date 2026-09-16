@@ -1,1 +1,90 @@
 
+--- case statements ----
+
+-- for data tranformation we use case  and to derive new information and new column based on existing data  without modifying the source---
+--- we will group the ddata into different categories based on certain conditions----
+--- data types of output shpuld match it can be then or else ,ust be matching---
+
+usecases:
+1 categorizing data
+2 mapping values
+3 handling nulls
+4 conditional aggregations
+
+
+case   starting 
+       when    then   conmditionto be checked
+
+       when 
+
+       else default if all values are false
+
+end  end of logic
+
+
+
+----usecase----
+
+
+create report of total sales for each category
+
+sales over 50 -- high
+sales 21- 50 --- medium
+sales 20 or less -- low
+sort  categories from sales to lowest
+
+
+select category,sum(sales) as totalsales from ( select orderid, sales,
+case 
+    when sales > 50 then 'high'
+    when sales > 20 then 'medium'
+    else 'low'
+End category
+from sales.orders) t
+group by category  order by totalsales desc;
+
+
+--usecase mapping  - 1--active , 0--in active
+select employeeid, firstname,lastname, gender,
+case 
+   when gender = 'F' Then  'Female'
+   when gender = 'M' then 'Male'
+   else 'Not Available'
+End GenderFullText
+
+from sales.employees
+
+----Retrieve customers details with abbreviated country code----
+select customerid, firstname,lastname,country,
+case 
+    when country = 'germany' then 'DE'
+    when country = 'USA' then 'US'
+    else 'n/a'
+end country
+from sales.customers
+
+--- case country
+      when 'Germany' then 'DE'
+      when country = 'USA' then 'US'
+      else 'n/a'
+    end country
+
+----handling nulls---
+---find the avergae scores of customers and treat nulls as 0
+and provide details such customer id and lastname---
+
+
+---conditional aggregations---
+
+count how many times each customer has made an order with sales greater than 30
+
+select customerid,
+sum(case 
+  when sales > 30 then 1
+  else 0
+end)salesflag,
+count(*) totalorders
+from sales.orders  group by customerid order by customerid
+
+
+
