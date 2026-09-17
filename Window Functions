@@ -123,3 +123,13 @@ sum(sales) over(partitiom by product) --- divide according to product
                 Optional                      Required
 
 
+select orderid,orderdate, sum(sales) over() Totalsales from sales.orders
+
+select orderid, orderdate, sum(sales) over(partition by productid) totalsales from sales.orders
+
+--- find the total sales for each combination of produc and order status additionally  provde details such as order id, order date
+
+select orderid, orderdate, sum(sales) over(partition by productid,orderstatus)  as total_sales,
+sum(sales) over(partition by productid,orderstatus) as salesbyproductorderstatus from sales.orders
+
+
