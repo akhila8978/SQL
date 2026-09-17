@@ -13,8 +13,8 @@ group by : return a single row for each group changes the granularity
 
 window: returns a result for each row the granularity stays the same 
  used for aggragtions + keep details(count,sum,avg,min,max)
-  rank functions: Row_number,rank,denserank,cum_dist,percent_rank,Ntile
-  analytics functions:lead,lag,firstvalue,last value
+ rank functions: Row_number,rank,denserank,cum_dist,percent_rank,Ntile
+ analytics functions:lead,lag,firstvalue,last value
   used for advanced data analysis
 
  
@@ -33,3 +33,10 @@ select orderid,orderdate, productid, sum(sales) over(partition by productid) tot
 ---Window function syntax---
 window functions f(x) =over( partition + order by +frame)
 avg(sales) over(partition by 
+
+Argument type	Example	Meaning
+Empty	RANK()	Function needs no argument
+Column	AVG(Sales)	Pass a column
+Number	NTILE(2)	Pass a number
+Multiple arguments	LEAD(Sales,2,10)	Pass multiple values
+Conditional logic	SUM(CASE WHEN Sales > 100 THEN 1 ELSE 0 END)	Use CASE inside the window function
