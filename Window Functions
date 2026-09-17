@@ -40,3 +40,86 @@ Column	AVG(Sales)	Pass a column
 Number	NTILE(2)	Pass a number
 Multiple arguments	LEAD(Sales,2,10)	Pass multiple values
 Conditional logic	SUM(CASE WHEN Sales > 100 THEN 1 ELSE 0 END)	Use CASE inside the window function
+
+
+
+  requiremenbt of parttition clause :
+
+                    ┌─────────────────────┐
+                    │   WINDOW FUNCTIONS  │
+                    └──────────┬──────────┘
+                               │
+          ┌────────────────────┼────────────────────┐
+          │                    │                    │
+          ▼                    ▼                    ▼
+ ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+ │ AGGREGATE       │   │ RANK            │   │ VALUE           │
+ │ FUNCTIONS       │   │ FUNCTIONS       │   │ FUNCTIONS       │
+ └────────┬────────┘   └────────┬────────┘   └────────┬────────┘
+          │                     │                     │
+          ▼                     ▼                     ▼
+      COUNT(all data types)          ROW_NUMBER(Empty)          LEAD(expr,
+      SUM(Numeric)            RANK(Empty)               offset, default)
+      AVG(Numeric)             DENSE_RANK(Empty)         LAG(expr,         All data types
+      MIN(Numeric)             CUME_DIST(Empty)          offset, default)
+      MAX(Numeric)             PERCENT_RANK(Empty)       FIRST_VALUE(expr) last value()
+                             NTILE(number)
+          │                     │                     │
+          ▼                     ▼                     ▼
+     Expression            Empty / Number        Expression
+     All Data Type
+     Numeric
+
+over --- will that we are using window function
+----parition clause---
+Partition divides the rows into groups , based on the columns
+
+sum(sales) over() whole thing is one window
+sum(sales) over(partitiom by product) --- divide according to product
+
+
+                         ┌──────────────────────┐
+                         │   WINDOW FUNCTIONS   │
+                         └──────────┬───────────┘
+                                    │
+             ┌──────────────────────┼──────────────────────┐
+             │                      │                      │
+             ▼                      ▼                      ▼
+     ┌───────────────┐       ┌───────────────┐      ┌─────────────────┐
+     │   AGGREGATE   │       │     RANK      │      │     VALUE       │
+     │   FUNCTIONS   │       │   FUNCTIONS   │      │   (Analytics)   │
+     └───────┬───────┘       └───────┬───────┘      └────────┬────────┘
+             │                       │                       │
+             ▼                       ▼                       ▼
+        COUNT(expr)             ROW_NUMBER()            LEAD(expr,
+        SUM(expr)               RANK()                  offset,default)
+        MAX(expr)               DENSE_RANK()            LAG(expr,
+        MIN(expr)               CUME_DIST()             offset,default)
+                                PERCENT_RANK()          FIRST_VALUE(expr)
+                                NTILE(n)
+             │                       │                       │
+             ▼                       ▼                       ▼
+        Expression:             Expression:             Expression:
+        All Data Type           Empty / Numeric         All Data Type
+        Numeric
+             │                       │                       │
+             └───────────────────────┼───────────────────────┘
+                                     │
+                                     ▼
+                         ┌─────────────────────┐
+                         │   PARTITION CLAUSE  │
+                         │      Optional       │
+                         └─────────────────────┘
+                                     │
+                                     ▼
+                         ┌─────────────────────┐
+                         │     ORDER CLAUSE    │
+                         └──────────┬──────────┘
+                                    │
+                     ┌──────────────┴──────────────┐
+                     │                             │
+                     ▼                             ▼
+              Aggregate                     Rank / Value
+                Optional                      Required
+
+
