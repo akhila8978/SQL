@@ -135,6 +135,8 @@ sum(sales) over(partition by productid,orderstatus) as salesbyproductorderstatus
 
 ---Window frame----
 
+note: Order by always uses a frame (aggregation function)
+
 window function : over clause()
 avg(sales) over(partition by category order by orderdate Rows Unbounded preceding)
 
