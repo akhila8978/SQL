@@ -133,3 +133,40 @@ select orderid, orderdate, sum(sales) over(partition by productid,orderstatus)  
 sum(sales) over(partition by productid,orderstatus) as salesbyproductorderstatus from sales.orders
 
 
+---Window frame----
+
+window function : over clause()
+avg(sales) over(partition by category order by orderdate Rows Unbounded preceding)
+
+Function         partition clause    order clause(start the data in a window)      frame clause(Defines a subset of rows in a window) 
+               (divides the data set into windows)
+
+Frame clause : for working on subset of data in each window
+ex:
+Avg(sales) over (partition by category order by orderdate rows between current row and un bounded following)
+sum(Sales) over(order by month rows bretween current row and 2 following)
+sum(sales) over(order by month rows between unbounded preceding and current row) 
+sum(sales) over(order by month rows between 1  preceding and 1 following)
+sum(sales) over(order by month rows betweeen unbounded preceding and unbounded following)
+
+Frame types
+Rows
+Range 
+
+frame boundary Lowervalue:
+current row
+in preceding
+un bound preceding
+
+frame boundary(higher value)
+current row
+N following
+un bound following
+
+
+select orderid, orderdate,orderstatus, sum(sales) over(partition by orderstatus order by orderdate rows between current row and 2 following) Totalsales from sales.orders
+
+--- short cuts for only preceding, the current row can be skipped---
+
+normalrow : rows between current row and 2 following
+short form : rows 2 following
