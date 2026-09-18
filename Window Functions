@@ -32,14 +32,22 @@ select orderid,orderdate, productid, sum(sales) over(partition by productid) tot
 
 ---Window function syntax---
 window functions f(x) =over( partition + order by +frame)
-avg(sales) over(partition by 
+avg(sales) over(partition by )
+
+---window function rules---
+
+1 window function can be used only in select and order by clauses (we are not allowed to filter the dataa by group by)
+2 nesting window function is not allowed
+3 sql execute window function after filtering the data after where clause
+4 window functions can be used together with group by in the same query. only if the same columns are used
+
 
 Argument type	Example	Meaning
-Empty	RANK()	Function needs no argument
-Column	AVG(Sales)	Pass a column
-Number	NTILE(2)	Pass a number
-Multiple arguments	LEAD(Sales,2,10)	Pass multiple values
-Conditional logic	SUM(CASE WHEN Sales > 100 THEN 1 ELSE 0 END)	Use CASE inside the window function
+1 Empty	RANK()	Function needs no argument 
+2 Column	AVG(Sales)	Pass a column
+3 Number	NTILE(2)	Pass a number
+4 Multiple arguments	LEAD(Sales,2,10)	Pass multiple values
+5 Conditional logic	SUM(CASE WHEN Sales > 100 THEN 1 ELSE 0 END)	Use CASE inside the window function
 
 
 
