@@ -1,99 +1,159 @@
------Nulls---
----nulls means nothing unknown and not equlas to anything(null or zero, not empty string, not blankspace)---
+SQL NULL Functions — Quick Revision Notes
+NULL means nothing / unknown. NULL is NOT equal to anything — not to another NULL, not to zero, not to an empty string '', not to a blank space ' '.
 
-isnull(value, replacement_value)
+🧠 Mind Map
+                            NULL (unknown, nothing)
+                                    │
+        ┌───────────────┬───────────┼────────────────┬──────────────────┐
+        │               │           │                │                  │
+     REPLACE a       FIRST non-  Return NULL     TEST for NULL     NULL-aware
+       NULL          NULL value   if equal        (cannot use =)    practices
+        │               │           │                │                  │
+    ISNULL(v, r)    COALESCE(     NULLIF(v1, v2)  value IS NULL      • storage rules
+    NVL (Oracle)     v1,v2,v3..)                   value IS NOT NULL • aggregation
+    IFNULL (MySQL)  (ANSI standard,                                  • concatenation
+        │           works in ALL                                     • joins
+    Only 2 values    databases)                                      • sorting
+    Fast            Unlimited values, slightly slower
+1️⃣ ISNULL — replace NULL with a fallback value
+SQL Server → ISNULL | Oracle → NVL | MySQL → IFNULL Takes exactly 2 values. Fast.
 
-isnull(shipping_adrress,'Unknown')
+ISNULL(value, replacement_value)
+-- Replace missing shipping address with 'Unknown'
+SELECT ISNULL(shipping_address, 'Unknown')
+FROM sales.customers;
 
-isnull(shipping_address, billing_address)
+-- Fall back from shipping address to billing address
+SELECT ISNULL(shipping_address, billing_address)
+FROM sales.customers;
+2️⃣ COALESCE — first non-NULL value from a list
+ANSI standard — works in ALL databases (SQL Server, Oracle, MySQL, PostgreSQL...). Takes unlimited values. Slightly slower than ISNULL, but portable and flexible.
 
-----Coalesce----
- to return first non-values form list
+COALESCE(value1, value2, value3, ...)
+-- returns the first value that is NOT NULL
+SELECT COALESCE(shipping_address, billing_address, 'N/A')
+FROM sales.customers;
+ISNULL vs COALESCE
+ISNULL	COALESCE
+Values	Only 2	Unlimited
+Speed	Faster	Slightly slower
+Portability	SQL Server only	All databases
+Equivalents	NVL (Oracle), IFNULL (MySQL)	ANSI standard
+3️⃣ NULLIF — returns NULL when two values are equal
+NULLIF(value1, value2)
+-- if value1 = value2 → returns NULL
+-- if value1 <> value2 → returns value1
+-- Treat 'Unknown' as if it were NULL
+SELECT NULLIF(shipping_address, 'Unknown');
 
-coalesce(value1,value2,value3)
-coalesce(shippingaddress, billingaddress,N/A)
+-- Treat billing address as NULL when it matches shipping
+SELECT NULLIF(shipping_address, billing_address);
+⭐ Use case: avoid divide-by-zero
+-- quantity = 0 would give a divide-by-zero error.
+-- NULLIF turns 0 into NULL, and division by NULL → NULL (no error)
+SELECT orderid,
+       sales,
+       quantity,
+       sales / NULLIF(quantity, 0) AS price
+FROM sales.orders;
+4️⃣ IS NULL / IS NOT NULL — testing for NULL
+⚠️ You can NEVER write value = NULL — the result is always unknown (never true). Use IS NULL (true if NULL) and IS NOT NULL (true if value exists).
 
-isnull : limited to 2 values , fast  ----> sql server (isnull),oracle NVL,Mysql -ifnull
+-- Customers who have no scores
+SELECT * FROM sales.customers WHERE score IS NULL;
 
-coalesce : unilimited, slow (available in all dbs)
+-- Customers who have scores
+SELECT * FROM sales.customers WHERE score IS NOT NULL;
+5️⃣ Use Case: NULLs with aggregations
+AVG(score) ignores NULL rows (averages only the rows that have a score). AVG(COALESCE(score, 0)) counts NULL rows as 0 — same number of rows in the denominator, so the result is lower.
 
+SELECT customerid,
+       score,
+       AVG(score) OVER ()            AS avgscore,   -- NULLs skipped
+       AVG(COALESCE(score, 0)) OVER () AS avgscore2 -- NULLs counted as 0
+FROM sales.customers;
+👉 Decide which behaviour you want: skip missing data or treat missing as zero.
 
-----usecase----
+6️⃣ Use Case: concatenation with NULLs
+In SQL Server, anything + NULL = NULL. So FirstName + ' ' + LastName becomes NULL when LastName is missing.
 
---handlinmg null with aggregations---
+SELECT customerid,
+       FirstName,
+       LastName,
+       FirstName + ' ' + COALESCE(LastName, '') AS FullName, -- '' keeps the row non-NULL
+       score,
+       COALESCE(score, 0) + 10 AS ScoreWithBonus            -- NULL score treated as 0
+FROM sales.customers;
+7️⃣ Use Case: NULLs in joins
+Join keys that can be NULL never match (NULL = NULL is unknown). Wrap both sides with ISNULL / COALESCE so NULL keys match NULL keys.
 
-1 incase of calculating avg we will get errros
+SELECT a.year, a.type, b.sales
+FROM table1 AS a
+JOIN table2 AS b
+  ON a.year = b.year
+ AND ISNULL(a.type, '') = ISNULL(b.type, '');   -- '=' not '==' in SQL
+8️⃣ Use Case: NULLs in sorting
+Order by score lowest → highest, with NULLs appearing last (SQL Server sorts NULLs first by default).
 
-select customerid,score,avg(score) over() avgscore, avg(coalesce(score,0)) over() avgscore2 from sales.customers 
+-- Default: NULLs come first (in SQL Server)
+SELECT customerid, score
+FROM Sales.customers
+ORDER BY score;
 
----Display the fullname of cutomers in single feild by adding fist and lastnames and 10 bonus points for each customer score
+-- Force NULLs to the end, two techniques:
+SELECT customerid,
+       score,
+       COALESCE(score, 99999)                                -- technique 1: big number pushes NULLs last
+       -- CASE WHEN score IS NULL THEN 1 ELSE 0 END AS flag  -- technique 2: flag column, ORDER BY flag, score
+FROM Sales.customers
+ORDER BY COALESCE(score, 99999);
+9️⃣ Storage best practices — how to represent "missing"?
+Option	Rule	Verdict
+1	Use NULLs and empty strings '', but avoid blank spaces ' '	❌ Avoid — empty strings are ambiguous
+2	Use only NULLs — avoid empty strings and blank spaces	✅ Recommended — one consistent way to say "missing"
+3	Use only a default value like 'Unknown', avoid NULLs	⚠️ Works for display, but pollutes data and breaks aggregations/filters
+Bottom line: store missing values as NULL; use ISNULL / COALESCE / NULLIF at the display layer to control how they appear.
 
-select customerid,firstname,Lastname,Firstname + ' ' + coalesce(Lastname,' ') as Fullname,score,coalesce(score,0)+10 scorewithbonus from sales.customers
+⚡ 30-Second Recap Table
+Function / Syntax	What it does	Example
+ISNULL(a, b)	Returns b if a is NULL (2 values, fast, SQL Server / NVL / IFNULL)	ISNULL(score, 0)
+COALESCE(a,b,c...)	First non-NULL from list (unlimited, all DBs)	COALESCE(ship, bill, 'N/A')
+NULLIF(a, b)	Returns NULL if a = b, else a	sales / NULLIF(qty, 0)
+x IS NULL	True when x is NULL	WHERE score IS NULL
+x IS NOT NULL	True when x has a value	WHERE score IS NOT NULL
+Golden rules:
 
+NULL = NULL is never true — use IS NULL.
+NULL + anything = NULL — guard concatenation with COALESCE.
+Dividing by zero? Wrap the divisor: x / NULLIF(y, 0).
+NULLs first in SQL Server ORDER BY — push them last with COALESCE(col, 99999).
+AVG(col) skips NULLs; AVG(COALESCE(col,0)) counts them as 0.
+🗂️ Flashcards (cover the answer, test yourself)
+Q: NULL is equal to zero / empty string / another NULL — true or false? A: False. NULL means unknown; it equals nothing, including another NULL.
 
----handling null with joins----
+Q: Oracle's equivalent of ISNULL? MySQL's? A: Oracle → NVL, MySQL → IFNULL.
 
-select a.year, a.type,b.sales from table1 as a join table2 as b on a.year =b.year and isnull(a.type, '') == Isnull(b.type, '')
+Q: Why is COALESCE slower but better than ISNULL? A: It accepts unlimited values and is ANSI standard (works in every DB); ISNULL is SQL Server-only, 2 values, but faster.
 
-------sorting data----
+Q: What does NULLIF(a, b) return when a = b? A: NULL. Otherwise it returns a.
 
+Q: Classic use of NULLIF? A: Prevent divide-by-zero: sales / NULLIF(quantity, 0).
 
-sorting customers form lowest to highest scores with nulls appearing last
+Q: Why does WHERE score = NULL return no rows? A: Comparing anything with NULL is unknown — you must use IS NULL.
 
-select customerid,score from Sales.customers order by score 
+Q: Difference between AVG(score) and AVG(COALESCE(score,0))? A: First skips NULL rows entirely; second includes NULL rows as zeros, lowering the average.
 
-select customerid,score,coalesce(score,99999), case when score is null then 1 else 0  end flag from Sales.customers order by coalesce(score,99999)
+Q: How do you make NULLs sort last in SQL Server? A: ORDER BY COALESCE(score, 99999) or a flag: CASE WHEN score IS NULL THEN 1 ELSE 0 END.
 
+Q: Why does joining on nullable keys miss rows, and the fix? A: NULL = NULL is unknown → wrap both sides: ISNULL(a.type,'') = ISNULL(b.type,'').
 
---- null if----
+Q: Recommended way to store missing values? A: NULL only — avoid empty strings, blank spaces, and sentinel defaults like 'Unknown' in the data.
 
-nullif(value1,value2)
-
-nullif(shipping_Address,'Unknown')
-
-nullif(shipping_address, Billing_address)
-nullif(originalprice, discountprice)
-
------usecase----
-
-dividing by zero
-
-select orderid,sales,quantity,sales/nullif(quantity,0) as price from sales.orders
-
-
-----is notnull--- return true if value is null otherwise it return false.
-Value is null , value is not null
-
-
-----usecase----
-
-identify customers who have no scores
-
-select * from sales.customers where score is null
-
-identify customers who have scores
-
-select * from sales.customers where score is not null
-
-----Handling null values----
-1 only  use nulls and empty strings but avoid blank spaces
-2 only use nulls and avoid empotystrings abd balnbksopaces
-3 only use default value unknown and avooid using nulls, empty strings and blankspaces 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+✍️ Practice checklist
+ Replace missing values: ISNULL vs COALESCE on the customers table
+ Concatenate a full name safely when last name may be NULL
+ Add a bonus with COALESCE(score, 0) + 10
+ Join two tables on a nullable column
+ Sort with NULLs last (both COALESCE and CASE-flag methods)
+ Divide safely with NULLIF(quantity, 0)
+ Filter with IS NULL / IS NOT NULL
