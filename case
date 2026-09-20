@@ -1,6 +1,40 @@
 
 --- case statements ----
 
+                    CASE
+                     │
+          ┌──────────┴───────────┐
+          │                      │
+          ▼                      ▼
+   SEARCHED CASE             SIMPLE CASE
+          │                      │
+          ▼                      ▼
+ CASE                       CASE country
+   WHEN sales > 50 THEN       WHEN 'Germany' THEN 'DE'
+   WHEN sales > 20 THEN       WHEN 'USA' THEN 'US'
+   ELSE ...                   ELSE 'N/A'
+ END                          END
+
+
+                  CONDITIONAL AGGREGATION
+                           │
+                           ▼
+                      CASE condition
+                           │
+                ┌──────────┴──────────┐
+                ▼                     ▼
+             TRUE                    FALSE
+                │                     │
+                ▼                     ▼
+                1                     0
+                │                     │
+                └──────────┬──────────┘
+                           ▼
+                         SUM()
+                           │
+                           ▼
+                  Count matching rows
+
 -- for data tranformation we use case  and to derive new information and new column based on existing data  without modifying the source---
 --- we will group the ddata into different categories based on certain conditions----
 --- data types of output shpuld match it can be then or else ,ust be matching---
