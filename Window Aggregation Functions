@@ -1,0 +1,73 @@
+---Window  Aggregation function----
+                 ┌──────────────────────────────┐
+                 │  WINDOW AGGREGATE FUNCTIONS   │
+                 └──────────────┬───────────────┘
+                                │
+          ┌─────────────────────┴─────────────────────┐
+          │                                           │
+   ┌──────▼──────┐                              ┌─────▼─────┐
+   │    COUNT    │                              │    SUM    │
+   └──────┬──────┘                              └─────┬─────┘
+          │                                           │
+   Number of rows                              Sum of values
+          │                                           │
+ COUNT(*) OVER(                                  SUM(Sales) OVER(
+ PARTITION BY Product)                            PARTITION BY Product)
+          
+          ┌────────────────────────────────────────────────┐
+          │                                                │
+   ┌──────▼──────┐                                  ┌──────▼──────┐
+   │     AVG     │                                  │     MIN     │
+   └──────┬──────┘                                  └──────┬──────┘
+          │                                                │
+   Average of values                                Minimum value
+          │                                                │
+ AVG(Sales) OVER(                                  MIN(Sales) OVER(
+ PARTITION BY Product)                              PARTITION BY Product)
+
+
+                       ┌──────────────┐
+                       │     MAX      │
+                       └──────┬───────┘
+                              │
+                       Maximum value
+                              │
+                       MAX(Sales) OVER(
+                       PARTITION BY Product)
+SELECT
+    Product,
+    Sales,
+
+    COUNT(*) OVER(PARTITION BY Product) AS Product_Count,
+
+    SUM(Sales) OVER(PARTITION BY Product) AS Total_Sales,
+
+    AVG(Sales) OVER(PARTITION BY Product) AS Avg_Sales,
+
+    MIN(Sales) OVER(PARTITION BY Product) AS Min_Sales,
+
+    MAX(Sales) OVER(PARTITION BY Product) AS Max_Sales
+
+FROM Sales;
+
+
+----count----
+count(*) over(partition by product)
+count(1) over(partition by product)
+
+both count(*). count(1) counts null values give same output
+partition can done based on the product type
+
+
+1 counts all the rows in the table regardless of whether any value is null
+
+-- for nulls we can add the table name
+ count(Sales) over(partition by product)
+
+
+ Task 1 : find the total number of orders  and provide details such as orderid , order date
+ select orderid, orderdate ,count(*)over() Total_orders from sales.orders
+
+
+
+
