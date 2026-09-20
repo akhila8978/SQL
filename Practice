@@ -1,112 +1,193 @@
-create database Company
+SQL DDL: Databases, Tables, Data Types & Constraints
+Quick-recap notes on creating and modifying databases/tables (DDL) and enforcing data accuracy with constraints. Pairs with: SQL NULL Functions Notes · SQL Operators Notes
+
+🧠 Mind Map
+                        SQL DDL & Constraints
+                                │
+        ┌───────────────┬───────┴───────┬────────────────┐
+        │               │               │                │
+   DATABASE OPS     TABLE OPS      DATA TYPES      CONSTRAINTS
+        │               │               │                │
+   ├─ CREATE       ├─ CREATE        ├─ Numbers       ├─ NOT NULL
+   ├─ ALTER        │   (columns +   │   Int, Bit,    ├─ DEFAULT
+   │  (rename DB)  │    types)      │   Decimal      ├─ PRIMARY KEY
+   └─ USE          ├─ ALTER TABLE   ├─ Date/Time     ├─ FOREIGN KEY
+                   │   ADD CONSTRAINT               │   (references PK)
+                   ├─ sp_rename     └─ Strings       └─ UNIQUE
+                   │   (rename tbl)    Char, Varchar    (+ CHECK bonus)
+                   └─ DROP
+                       (delete table)
+1. Database Operations
+CREATE DATABASE
+CREATE DATABASE Company;
+ALTER DATABASE (rename) — SQL Server
+ALTER DATABASE Test1 MODIFY NAME = 'Company';
+USE (select the database to work in)
+USE Company;
+💡 USE must run before creating tables — otherwise they land in the wrong database.
+
+2. Table Operations
+CREATE TABLE
+CREATE TABLE Employees (
+    EmployeeID   INT           PRIMARY KEY NOT NULL,
+    EmployeeName VARCHAR(50)   NOT NULL,
+    Phone        INT           NOT NULL,
+    DepId        INT           NOT NULL
+);
+ALTER TABLE (add a constraint later)
+ALTER TABLE Employees
+ADD CONSTRAINT U_phone UNIQUE (Phone);
+Rename a table — SQL Server
+EXEC sp_rename 'tableEmployees', 'Employee';
+DROP TABLE (deletes the table AND its data — irreversible)
+DROP TABLE Employees;
+3. Data Types (SQL Server)
+Data Type	From	To	Category
+INT	-2,147,483,648	2,147,483,647	Number
+BIT	0 (False/No/Off)	1 (True/Yes/On)	Number
+DECIMAL	-10^38 + 1	10^38 - 1	Number
+DATETIME	Jan 1, 1753	Dec 31, 9999	Date
+CHAR	Fixed length	Max 8,000 characters (fixed-length, non-Unicode)	String
+VARCHAR	Variable length	Max 8,000 characters (variable-length, non-Unicode)	String
+BINARY	—	Max 8,000 bytes (fixed-length binary data)	Binary
+CHAR vs VARCHAR — the classic interview trap
+CHAR(10)	VARCHAR(10)
+Storage	Always uses 10 chars	Uses only what's needed
+'AB' stored as	'AB ' (padded)	'AB'
+Best for	Fixed values (country codes)	Names, emails, addresses
+4. Constraints
+Purpose: accuracy and reliability of data in the database.
+
+4.1 NOT NULL — column cannot hold NULL
+CREATE TABLE Employees (
+    EmployeeID   INT         PRIMARY KEY NOT NULL,
+    EmployeeName VARCHAR(50) NOT NULL,
+    Phone        INT         NOT NULL,
+    DepId        INT         NOT NULL
+);
+Rejects NULL on INSERT/UPDATE.
+Ties into NULL rules: prefer NULL or empty-string policy — never blank spaces (see NULL notes).
+4.2 DEFAULT — fallback value when none is supplied
+CREATE TABLE Employees (
+    EmployeeID   INT           PRIMARY KEY NOT NULL,
+    EmployeeName VARCHAR(50)   NOT NULL,
+    Phone        INT           NOT NULL,
+    DepId        INT           NOT NULL,
+    Salary       DECIMAL(10,2) DEFAULT 3000.00
+);
+Omit the column on INSERT → SQL fills in 3000.00 automatically.
+4.3 PRIMARY KEY — uniquely identifies each row
+Rules: unique + not null (one per table).
+
+CREATE TABLE Employees (
+    EmployeeID   INT           PRIMARY KEY NOT NULL,
+    EmployeeName VARCHAR(50)   NOT NULL,
+    Phone        INT           NOT NULL,
+    DepId        INT           NOT NULL,
+    Salary       DECIMAL(10,2) DEFAULT 3000.00
+);
+4.4 FOREIGN KEY — references a primary key in another table
+The PK of one table gets inserted into another table as a link.
+
+-- Parent table
+CREATE TABLE tableDepartments (
+    DepId          INT         PRIMARY KEY NOT NULL,
+    DepartmentName VARCHAR(50) NOT NULL
+);
+
+-- Child table: DepId references the parent's PK
+CREATE TABLE Employees (
+    EmployeeID   INT           PRIMARY KEY NOT NULL,
+    EmployeeName VARCHAR(50)   NOT NULL,
+    Phone        INT           NOT NULL,
+    DepId        INT           FOREIGN KEY REFERENCES tableDepartments(DepId) NOT NULL,
+    Salary       DECIMAL(10,2) DEFAULT 3000.00
+);
+💡 FK guarantees referential integrity — you can't insert an employee into a department that doesn't exist.
+
+4.5 UNIQUE — all values in a column must be different
+CREATE TABLE Employees (
+    EmployeeID   INT           PRIMARY KEY NOT NULL,
+    EmployeeName VARCHAR(50)   NOT NULL,
+    Phone        INT           UNIQUE,
+    DepId        INT           FOREIGN KEY REFERENCES tableDepartments(DepId) NOT NULL,
+    Salary       DECIMAL(10,2) DEFAULT 3000.00
+);
+Add UNIQUE later via a named constraint:
+
+ALTER TABLE Employees
+ADD CONSTRAINT U_phone UNIQUE (Phone);
+4.6 CHECK (bonus) — values must satisfy a condition
+CREATE TABLE Employees (
+    EmployeeID   INT           PRIMARY KEY NOT NULL,
+    EmployeeName VARCHAR(50)   NOT NULL,
+    Phone        INT           NOT NULL,
+    Age          INT           NOT NULL CHECK (Age >= 18),
+    DepId        INT           NOT NULL
+);
+5. Full Example — Parent + Child Schema
+CREATE DATABASE Company;
+USE Company;
+
+-- 1. Parent (departments)
+CREATE TABLE tableDepartments (
+    DepId          INT         PRIMARY KEY NOT NULL,
+    DepartmentName VARCHAR(50) NOT NULL
+);
+
+-- 2. Child (employees) — uses every constraint at once
+CREATE TABLE tableEmployees (
+    EmployeeID   INT           PRIMARY KEY NOT NULL,          -- PK
+    EmployeeName VARCHAR(50)   NOT NULL,                      -- NOT NULL
+    Phone        INT           UNIQUE,                        -- UNIQUE
+    Age          INT           NOT NULL CHECK (Age >= 18),    -- CHECK
+    DepId        INT           NOT NULL,
+    Salary       DECIMAL(10,2) DEFAULT 3000.00,               -- DEFAULT
+    CONSTRAINT FK_emp_dept FOREIGN KEY (DepId)                -- FK
+        REFERENCES tableDepartments(DepId)
+);
+📋 One-Glance Recap Table
+Operation	Syntax	Effect
+Create DB	CREATE DATABASE Company;	New empty database
+Rename DB	ALTER DATABASE Test1 MODIFY NAME = 'Company';	Renames database
+Select DB	USE Company;	Sets active database
+Create table	CREATE TABLE T (col type constraints);	New empty table
+Rename table	EXEC sp_rename 'Old', 'New';	Renames table
+Drop table	DROP TABLE T;	Deletes table + data
+Add constraint later	ALTER TABLE T ADD CONSTRAINT name UNIQUE(col);	Adds rule to existing table
+Constraint	Guarantees	Rejects
+NOT NULL	Column always has a value	NULL
+DEFAULT	Fills value when none given	— (auto-fills)
+PRIMARY KEY	Unique + not null row identity	Duplicates, NULLs
+FOREIGN KEY	Value exists in parent table's PK	Orphan references
+UNIQUE	No repeated values in column	Duplicates (NULL usually allowed)
+CHECK	Condition is true (Age >= 18)	Failing values
 
 
----Alter---
-
-alter database Test1 modify name="Company";
-
-Use Company;
-
-create Table Employees(
-EmployeeID int Primary key Not NUll,
-EmployeeName varchar(50) Not null,
-Phone Int not null,
-DepId int not null)
-
-
-
----Rename---
-
-EXEC sp_rename 'tableEmployees', 'Employee'
-
-----DROP----
-
-DROP TABLE employees;
-
----Data Types---
-
-### Data Types
-
-| Data Type    | From           | To                                                                       | Category |
-| ------------ | -------------- | ------------------------------------------------------------------------ | -------- |
-| **Int**      | -2,147,483,648 | 2,147,483,647                                                            | Number   |
-| **Bit**      | 0  False / No / Off            | 1       True / Yes / On                                                              
-| **Decimal**  | -10^38 + 1     | 10^38 - 1                                                                | Number   
-| **Datetime** | Jan 1, 1753    | Dec 31, 9999                                                             | Date     |
-| **Char**     | Char           | Maximum length of 8,000 characters (Fixed-length non-Unicode characters) | String   |
-| **Varchar**  | Varchar        | Maximum length of 8,000 characters (Variable-length non-Unicode data)    | String   |
-| **Binary**   | —              | Maximum length of 8,000 bytes (Fixed-length binary data)                 | —        |
+⚡ Flashcards (test yourself)
+Q: Primary Key rules? → A: Unique + NOT NULL, one per table.
+Q: Which constraint auto-fills a value when you skip the column? → A: DEFAULT.
+Q: FK references what in the other table? → A: Its Primary Key.
+Q: sp_rename vs ALTER DATABASE ... MODIFY NAME? → A: Renames a table vs renames a database.
+Q: CHAR(10) vs VARCHAR(10) for 'AB'? → A: CHAR pads to 10 chars; VARCHAR stores 2.
+Q: Can UNIQUE columns hold NULL? → A: Usually yes (NULL ≠ duplicate) — PK columns cannot.
+Q: Which constraint enforces Age >= 18? → A: CHECK.
+Q: What does DROP TABLE remove? → A: Table structure AND all data — irreversible.
+Q: Constraint that prevents inserting an employee into a nonexistent department? → A: FOREIGN KEY.
+Q: Where must USE Company; run? → A: Before creating tables, so they land in the right DB.
 
 
-----Constaints---
-
-### for accuracy and relaibility of data in database
-
-1 Not Null : Ensures that colums cannot have nullvalue
-
-create Table Employees(
-EmployeeID int Primary key Not NUll,
-EmployeeName varchar(50) Not null,
-Phone Int Not null,
-DepId int Not null)
-
------
-2 Default Constaint : Default value for a column when None is specified
-create Table Employees(
-EmployeeID int Primary key Not NUll,
-EmployeeName varchar(50) Not null,
-Phone Int Not null,
-DepId int Not null
-Salary Decimal(10,2) Default 3000.00)
-
-----
-3 Primary Key: Uniquely identifiies each row/records in DB
-it should be unique and not null
-
-create Table Employees(
-EmployeeID int Primary key Not NUll,
-EmployeeName varchar(50) Not null,
-Phone Int Not null,
-DepId int Not null
-Salary Decimal(10,2) Default 3000.00)
-
------
-4 Foreign Key: Refernce key  primary (Uniquly identifies a row/record in any other database table)
-primary key of one table inserted in another table
-
-create Table Employees(
-EmployeeID int Primary key Not NUll,
-EmployeeName varchar(50) Not null,
-Phone Int Not null,
-DepId int Foreign key refernces
-tableDepartmnets(DepId) not null,
-)
-create Table tableEmployees(
-DepId int primary akey not null,
-DepartmentName varchar(50) Not null)
-
-5 Unique : Ensures that all values in coluumns are different 
-
-create Table Employees(
-EmployeeID int Primary key Not NUll,
-EmployeeName varchar(50) Not null,
-Phone Int unique,
-DepId int Foreign key refernces
-tableDepartmnets(DepId) not null)
-
---- to make unique constarint---
-
-alter table employees add constraint U_phone unique(phone)
+✅ Practice Checklist
+ Create a database, rename it, and USE it.
+ Create a parent table with a PK and a child table with an FK referencing it.
+ Try inserting a child row with a bad FK → observe the rejection.
+ Insert without the Salary column → verify DEFAULT kicks in.
+ Insert two rows with the same Phone → confirm UNIQUE blocks the second.
+ Insert Age = 16 → confirm CHECK rejects it.
+ Add a constraint after table creation with ALTER TABLE ... ADD CONSTRAINT.
+ DROP the child table first, then the parent (FK order matters!).
 
 
-6 Check Cnstraint:ensures all values in colums satisfy certain conditions
-
-create Table Employees(
-EmployeeID int Primary key Not NUll,
-EmployeeName varchar(50) Not null,
-Phone Int not null,
-Age int not null check (age>=18),
-depid int not null,)
-
-
-
+🔗 Related Notes
+NULL functions & traps — NOT NULL constraint + NULL handling: SQL-NULL-Functions-Notes.md
+Operators — comparison/logical operators used inside CHECK conditions: SQL-Operators-Notes.md
