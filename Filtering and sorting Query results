@@ -1,7 +1,25 @@
-
-----Distinct , Top, ORDER BY, LIMIT and OFFSET -----
-
-
+SQL Notes — Filtering & Sorting
+DISTINCT · TOP · ORDER BY · LIMIT · OFFSET
+🧠 Mind Map — Quick Recap
+                        ┌─────────────────────────────┐
+                        │   FILTERING & SORTING SQL   │
+                        └──────────────┬──────────────┘
+          ┌───────────────┬────────────┼────────────────┬────────────────┐
+          ▼               ▼            ▼                ▼                ▼
+    ┌───────────┐  ┌───────────┐ ┌───────────┐   ┌────────────┐  ┌────────────┐
+    │ DISTINCT  │  │ ORDER BY  │ │  LIMIT    │   │  OFFSET    │  │    TOP     │
+    │(remove    │  │ (sort     │ │ (how many │   │ (skip rows │  │ (SQL Server│
+    │ duplicate │  │  rows)    │ │  rows to  │   │  before    │  │  version of│
+    │  values)  │  │           │ │  return)  │   │  limiting) │  │   LIMIT)   │
+    └───────────┘  └───────────┘ └───────────┘   └────────────┘  └────────────┘
+                          │              │
+                    ASC (A→Z, old→new)   │
+                    DESC (Z→A, new→old)  │
+                          └──────┬───────┘
+                                 ▼
+                     ORDER BY ... LIMIT n OFFSET m
+                     = sort first, skip m, take n
+📋 The movies table (used in all examples)
 id	title	director	year	length_minutes
 1	Toy Story 2	John Lasseter	1999	93
 2	A Bug's Life	John Lasseter	1998	95
@@ -13,27 +31,156 @@ id	title	director	year	length_minutes
 8	Cars 2	John Lasseter	2011	120
 9	WALL-E	Andrew Stanton	2008	104
 10	Brave	Brenda Chapman	2012	102
-
-
-1 List all directors of Pixar movies (alphabetically), without duplicates
+1️⃣ DISTINCT — remove duplicates
+Returns each value only once, even if it appears many times.
 
 SELECT DISTINCT director FROM movies
 ORDER BY director ASC;
+Result (duplicates like "John Lasseter" appear once):
 
-2 List the last four Pixar movies released (ordered from most recent to least)
+director
+Andrew Stanton
+Brad Bird
+Brenda Chapman
+Dan Scanlon
+John Lasseter
+Lee Unkrich
+Pete Docter
+How it works:
 
+SELECT director alone would repeat John Lasseter 4 times.
+DISTINCT applies to all columns after it — SELECT DISTINCT director, year keeps a row only if the combination is unique.
+ Without DISTINCT              With DISTINCT
+ ┌────────────────┐            ┌────────────────┐
+ │ John Lasseter  │            │ John Lasseter  │
+ │ John Lasseter  │   ─────►   │ Brad Bird      │
+ │ John Lasseter  │            │ Pete Docter    │
+ │ Brad Bird      │            │ ...each once   │
+ └────────────────┘            └────────────────┘
+2️⃣ ORDER BY — sort the result
+Sorts rows by one or more columns.
+
+ASC — ascending: A→Z, smallest→largest, oldest→newest (default, can be omitted)
+DESC — descending: Z→A, largest→smallest, newest→oldest
+Example — newest movies first
 SELECT title, year FROM movies
 ORDER BY year DESC
 LIMIT 4;
+Result:
 
-3 List the first five Pixar movies sorted alphabetically
+title	year
+Monsters University	2013
+Brave	2012
+Cars 2	2011
+Toy Story 3	2010
+Example — sort by multiple columns
+SELECT title, director, year FROM movies
+ORDER BY director ASC, year DESC;
+→ Groups by director (A→Z), and inside each director, newest movie first.
+
+Sorting rules:
+
+Text sorts alphabetically, numbers numerically, dates chronologically.
+NULL handling differs by database: in PostgreSQL/SQLite, NULLs come last with ASC and first with DESC; in SQL Server they come first with ASC.
+3️⃣ LIMIT — return only N rows
+Takes the first N rows of the (already sorted) result.
 
 SELECT title FROM movies
 ORDER BY title ASC
 LIMIT 5;
+Result (first 5 alphabetically):
 
-4 List the next five Pixar movies sorted alphabetically
+title
+A Bug's Life
+Brave
+Cars 2
+Monsters University
+The Incredibles
+⚠️ LIMIT without ORDER BY is unreliable — the database returns rows in an unspecified order, so "first 5" may differ each run. Almost always use them together.
+
+4️⃣ OFFSET — skip M rows before returning
+Used with LIMIT for pagination (page 1, page 2, ...).
 
 SELECT title FROM movies
 ORDER BY title ASC
 LIMIT 5 OFFSET 5;
+→ Skip the first 5 alphabetically, return the next 5.
+
+Result:
+
+title
+Toy Story
+Toy Story 2
+Toy Story 3
+Up
+WALL-E
+Pagination pattern
+Page 1:  LIMIT 10 OFFSET 0    → rows 1–10
+Page 2:  LIMIT 10 OFFSET 10   → rows 11–20
+Page 3:  LIMIT 10 OFFSET 20   → rows 21–30
+
+General formula:  OFFSET = (page_number − 1) × page_size
+ Alphabetical order of all 10 movies
+ ┌──────────────────────────────────────────┐
+ │ A Bug's Life  ┐                          │
+ │ Brave         │                          │
+ │ Cars 2        ├─ OFFSET 0, LIMIT 5 (pg 1)│
+ │ Monsters Univ │                          │
+ │ The Incredib. ┘                          │
+ ├──────────────────────────────────────────┤
+ │ Toy Story     ┐                          │
+ │ Toy Story 2   │                          │
+ │ Toy Story 3   ├─ OFFSET 5, LIMIT 5 (pg 2)│
+ │ Up            │                          │
+ │ WALL-E        ┘                          │
+ └──────────────────────────────────────────┘
+5️⃣ TOP — the SQL Server (and MS Access) version
+LIMIT doesn't exist in SQL Server. Use TOP right after SELECT instead:
+
+-- SQL Server / MS Access
+SELECT TOP 4 title, year FROM movies
+ORDER BY year DESC;
+Equivalent in MySQL/PostgreSQL/SQLite:
+
+SELECT title, year FROM movies
+ORDER BY year DESC
+LIMIT 4;
+Oracle (older) uses FETCH FIRST / ROWNUM instead:
+
+-- Oracle 12c+
+SELECT title, year FROM movies
+ORDER BY year DESC
+FETCH FIRST 4 ROWS ONLY;
+Database	Syntax for "first N rows"
+MySQL / PostgreSQL / SQLite	LIMIT N at the end
+SQL Server / Access	SELECT TOP N ...
+Oracle 12c+	FETCH FIRST N ROWS ONLY
+🧭 Logical order of execution (why it matters)
+SQL is written in one order but executed in another:
+
+ WRITTEN:              EXECUTED:
+ ─────────             ────────────────
+ SELECT   →            5. SELECT  (pick columns / apply DISTINCT)
+ FROM     →            1. FROM    (get the table)
+ WHERE    →            2. WHERE   (filter rows)
+ ORDER BY →            3. ORDER BY(sort what's left)
+ LIMIT    →            4. LIMIT/OFFSET (trim to N rows)
+Key takeaways:
+
+ORDER BY runs before LIMIT — so LIMIT takes the top rows of the sorted result.
+DISTINCT applies at SELECT time — with ORDER BY, only columns in the SELECT list can be used reliably.
+WHERE filters rows before sorting; HAVING filters groups after aggregation (covered later).
+✅ Recap Card
+Clause	Job	Example
+DISTINCT	Remove duplicate values	SELECT DISTINCT director FROM movies
+ORDER BY col ASC	Sort A→Z / small→big	ORDER BY title ASC
+ORDER BY col DESC	Sort Z→A / big→small	ORDER BY year DESC
+LIMIT n	Keep only first n rows	LIMIT 4
+OFFSET m	Skip first m rows (pagination)	LIMIT 5 OFFSET 5
+TOP n	Same as LIMIT (SQL Server)	SELECT TOP 4 ...
+One-line memory hooks
+DISTINCT = "no repeats"
+ORDER BY = "sort it"
+LIMIT = "give me N"
+OFFSET = "skip M first"
+TOP = LIMIT's SQL Server cousin
