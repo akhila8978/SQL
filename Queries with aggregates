@@ -1,65 +1,146 @@
+SQL Aggregates, GROUP BY & HAVING — Quick Revision Notes
+Aggregates collapse many rows into one summary value. GROUP BY splits rows into buckets so the aggregate runs per bucket. HAVING filters groups (WHERE filters rows) — that's the whole trick.
 
-Table: employees
-role	name	building	years_employed
-Engineer	Becky A.	1e	4
-Engineer	Dan B.	1e	2
-Engineer	Sharon F.	1e	6
-Engineer	Dan M.	1e	4
-Engineer	Malcom S.	1e	1
-Artist	Tylar S.	2w	2
-Artist	Sherman D.	2w	8
-Artist	Jakob J.	2w	6
-Artist	Lillia A.	2w	7
-Artist	Brandon J.	2w	7
-Manager	Scott K.	1e	9
-Manager	Shirlee M.	1e	3
-Manager	Daria O.	2w	6
+🧠 Mind Map
+                       AGGREGATE FUNCTIONS
+                       (many rows → 1 value)
+                                │
+    ┌──────────┬──────────┬────┴─────┬──────────┬──────────┐
+    │          │          │          │          │          │
+  COUNT      SUM        AVG        MIN        MAX      (scalar funcs)
+  how many   total      mean       smallest   largest    ISNULL, COALESCE
+    │          │          │        (work on    (work on
+    │          │          │         any type)   any type)
+    │          │          │
+    └──────────┴──────────┴──── GROUP BY bucket ────┐
+                                                 │
+                        ┌────────────────────────┴──────────────┐
+                        │                                       │
+                    WHERE (rows)                          HAVING (groups)
+                  runs BEFORE grouping                 runs AFTER grouping
+                  can't use aggregates                 CAN use aggregates
 
 
-1 Find the longest time that an employee has been at the studio
-
-SELECT MAX(years_employed) as Max_years_employed
+1️⃣ The 5 aggregate functions
+SELECT MAX(years_employed) AS max_years_employed
 FROM employees;
 
-2 For each role, find the average number of years employed by employees in that role 
-
-SELECT role,avg(years_employed) 
-FROM employees group by role;
-
-3 Find the total number of employee years worked in each building 
-
-SELECT building , sum(years_employed) 
-FROM employees group by building
-
-
------ part 2 having ---
-
-
-Table: employees
-role	name	building	years_employed
-Engineer	Becky A.	1e	4
-Engineer	Dan B.	1e	2
-Engineer	Sharon F.	1e	6
-Engineer	Dan M.	1e	4
-Engineer	Malcom S.	1e	1
-Artist	Tylar S.	2w	2
-Artist	Sherman D.	2w	8
-Artist	Jakob J.	2w	6
-Artist	Lillia A.	2w	7
-Artist	Brandon J.	2w	7
+SELECT AVG(years_employed) FROM employees;   -- average
+SELECT SUM(years_employed) FROM employees;   -- total
+SELECT MIN(years_employed) FROM employees;   -- smallest
+SELECT COUNT(*) FROM employees;              -- how many rows
+Function	Returns	Notes
+COUNT(*)	number of rows	counts rows, even with NULLs
+COUNT(col)	number of non-NULL values in col	skips NULLs ⚠️
+SUM(col)	total	NULLs ignored
+AVG(col)	mean	NULLs ignored
+MIN(col) / MAX(col)	smallest / largest	works on numbers, text, dates
+Alias the result with AS — otherwise the column header is ugly ((No column name)).
 
 
-1 Find the number of Artists in the studio (without a HAVING clause) ✓
-SELECT role, COUNT(*) as Number_of_artists
+2️⃣ GROUP BY — one result row per group
+-- Average years employed per role
+SELECT role, AVG(years_employed)
 FROM employees
-WHERE role = "Artist";
+GROUP BY role;
 
-2 Find the number of Employees of each role in the studio
+-- Total employee-years per building
+SELECT building, SUM(years_employed)
+FROM employees
+GROUP BY building;
 
-select role,count(role) from employees group by role 
+-- Number of employees per role
+SELECT role, COUNT(role)
+FROM employees
+GROUP BY role;
+🔑 Golden rule: every column in SELECT must be either inside an aggregate or listed in GROUP BY. Nothing else.
 
-3 Find the total number of years employed by all Engineers
+3️⃣ WHERE vs HAVING — filter rows vs filter groups
+-- WHERE: filters ROWS before grouping (no aggregates allowed here)
+SELECT role, COUNT(*) AS number_of_artists
+FROM employees
+WHERE role = 'Artist';        -- ✓ constant value, runs pre-grouping
+
+-- HAVING: filters GROUPS after grouping (aggregates allowed here)
 SELECT role, SUM(years_employed)
 FROM employees
 GROUP BY role
-HAVING role = "Engineer";
+HAVING SUM(years_employed) > 10;   -- ✓ aggregate condition
+Execution:  FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → TOP
+                       ↑                        ↑
+                 rows get filtered        groups get filtered
+⚠️ WHERE score > 5 ✓ · WHERE SUM(score) > 5 ✗ (error — SUM doesn't exist yet) ⚠️ HAVING role = 'Artist' technically works, but WHERE role = 'Artist' is the right tool — it's faster.
+
+4️⃣ Counting without GROUP BY (when you only need one group)
+-- Number of Artists — no GROUP BY needed for a single value
+SELECT role, COUNT(*) AS number_of_artists
+FROM employees
+WHERE role = 'Artist';
+
+-- Total years employed by Engineers
+SELECT role, SUM(years_employed)
+FROM employees
+WHERE role = 'Engineer'
+GROUP BY role;               -- GROUP BY optional here, HAVING also possible
+Three ways to filter one group — know them all:
+
+Technique	Filter applied	Best when
+WHERE role = 'Engineer'	before grouping	fastest, most readable ✓
+GROUP BY role HAVING role = 'Engineer'	after grouping	works, but wasteful
+WHERE + no GROUP BY, one output row	before grouping	only need a single total
+
+5️⃣ Worked example — the employees table
+role      name        building   years_employed
+Engineer  Becky A.    1e          4
+Engineer  Dan B.      1e          2
+Engineer  Sharon F.   1e          6
+Engineer  Dan M.      1e          4
+Engineer  Malcom S.   1e          1
+Artist    Tylar S.    2w          2
+Artist    Sherman D.  2w          8
+Artist    Jakob J.    2w          6
+Artist    Lillia A.   2w          7
+Artist    Brandon J.  2w          7
+Manager   Scott K.    1e          9
+Manager   Shirlee M.  1e          3
+Manager   Daria O.    2w          6
+Query	Result
+MAX(years_employed)	9 (Scott K.)
+AVG grouped by role	Engineer 3.4, Artist 6.0, Manager 6.0
+SUM grouped by building	1e → 26, 2w → 36
+COUNT(*) grouped by role	Engineer 5, Artist 5, Manager 3
+6️⃣ Recap table
+Concept	Syntax	Filters	Runs at
+Aggregate	SUM/AVG/MIN/MAX/COUNT(col)	—	after WHERE
+Group	GROUP BY col	—	after WHERE
+Row filter	WHERE	rows, no aggregates	before grouping
+Group filter	HAVING	groups, aggregates OK	after grouping
+Label	AS alias	—	output only
+
+
+7️⃣ Flashcards 🃏
+Q: Which 5 aggregate functions? → COUNT, SUM, AVG, MIN, MAX
+Q: COUNT(*) vs COUNT(col)? → * counts all rows; col skips NULLs
+Q: What does GROUP BY do? → Splits rows into buckets; aggregate runs per bucket
+Q: Golden rule of SELECT + GROUP BY? → Every non-aggregated column must be in GROUP BY
+Q: WHERE vs HAVING? → WHERE filters rows (before grouping); HAVING filters groups (after)
+Q: Can WHERE use SUM()? → No — aggregates don't exist until after WHERE runs
+Q: Can HAVING use role = 'Engineer' (no aggregate)? → Yes but shouldn't — use WHERE
+Q: Fastest way to get total years of Engineers only? → WHERE role = 'Engineer' then SUM()
+Q: Execution order again? → FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → TOP
+Q: Does AVG count NULLs in its average? → No — NULLs are skipped entirely
+
+
+8️⃣ Practice checklist ✅
+ Write MAX, MIN, SUM, AVG, COUNT on years_employed with an AS alias
+ Group employees by role and get the average per role
+ Group employees by building and get the total per building
+ Count employees per role — once with COUNT(role), once with COUNT(*) (same result here, differs only with NULLs)
+ Rewrite a HAVING role = 'X' query as WHERE role = 'X' and confirm both give the same answer
+ Deliberately run WHERE SUM(...) > 5 and read the error — burn it into memory
+ Deliberately select a column not in GROUP BY and read the error — burn it into memory
+🔗 Related notes
+NULL functions — SQL-NULL-Functions-Notes.md (aggregates skip NULLs, ISNULL/COALESCE before aggregating)
+Operators — SQL-Operators-Notes.md (comparison/logical ops used inside WHERE & HAVING)
+DDL & constraints — SQL-DDL-Tables-Constraints-Notes.md
+SELECT basics — SQL-SELECT-Basics-Notes.md (full coding vs execution order chart)
