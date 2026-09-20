@@ -1,5 +1,307 @@
 ---set operator ----In  order to combine the 2 tables based on columns we will use set operators 
 
+
+# SQL Set Operators: Quick Recap
+
+Set operators combine the **rows** of two (or more) queries into one result. They stack results vertically, unlike JOINs, which add columns side by side.
+
+                         ┌───────────────────────┐
+                         │    SQL SET OPERATORS  │
+                         └───────────┬───────────┘
+                                     │
+                     COMBINE / STACK ROWS
+                                     │
+          ┌──────────────┬───────────┼──────────────┐
+          │              │           │              │
+          ▼              ▼           ▼              ▼
+       UNION        UNION ALL     EXCEPT        INTERSECT
+          │              │           │              │
+          ▼              ▼           ▼              ▼
+    Both queries     Both queries  First query   Common rows
+    + remove         + keep        MINUS         in both
+    duplicates       duplicates   second
+          │              │           │              │
+          ▼              ▼           ▼              ▼
+      DISTINCT        ALL rows    Order matters   Order doesn't
+                                    A - B ≠ B - A
+
+
+
+
+
+mindmap
+                      SET OPERATOR RULES
+                            │
+        ┌───────────────────┼────────────────────┐
+        │                   │                    │
+        ▼                   ▼                    ▼
+ Same number          Compatible            Same column
+ of columns           data types              order
+        │                   │                    │
+        └───────────────────┼────────────────────┘
+                            ▼
+                   FIRST QUERY CONTROLS
+                    FINAL COLUMN NAMES
+                            │
+                            ▼
+                    ORDER BY ONLY ONCE
+                      AT THE VERY END
+   
+
+UNION
+      All distinct rows from both queries
+      Duplicates removed
+UNION ALL
+      All rows from both queries
+      Duplicates kept
+      Faster than UNION
+
+
+             ┌───────────────┐
+             │     UNION     │
+             └───────┬───────┘
+                     │
+              Combine results
+                     │
+               Remove duplicates
+                     │
+                DISTINCT rows
+
+
+             ┌───────────────┐
+             │   UNION ALL   │
+             └───────┬───────┘
+                     │
+              Combine results
+                     │
+               Keep duplicates
+                     │
+                  Faster
+EXCEPT
+      Distinct rows from the first query
+      Not found in the second query
+      Order matters
+      MINUS in Oracle
+INTERSECT
+      Only the rows common to both
+    Rules
+      ORDER BY once at the very end
+      Same number of columns
+      Matching data types
+      Same column order
+      First query sets the column names
+      Check the columns map correctly
+
+
+                 EXCEPT
+                   │
+              FIRST QUERY
+                   │
+                   ▼
+              ┌──────────┐
+              │    -     │
+              └────┬─────┘
+                   ▲
+                   │
+             SECOND QUERY
+                   │
+                   ▼
+        Rows in FIRST but
+        NOT in SECOND
+```
+
+## Quick comparison
+
+| Operator | Returns | Duplicates | Order of queries matters? |
+|---|---|---|---|
+| `UNION` | All distinct rows from both queries | Removed | No |
+| `UNION ALL` | All rows from both queries | Kept | No |
+| `EXCEPT` (`MINUS` in Oracle) | Distinct rows from the first query that are not in the second | Removed | **Yes** |
+| `INTERSECT` | Only the rows found in both queries | Removed | No |
+
+> `UNION ALL` is faster than `UNION` because it skips the step of finding and removing duplicates.
+
+
+UNION
+A + B
+Everything from both
+Duplicates removed
+
+
+UNION ALL
+A + B
+Everything from both
+Duplicates kept
+
+
+EXCEPT
+A - B
+Only A
+
+
+INTERSECT
+A ∩ B
+Only common
+## Rules
+
+1. `ORDER BY` can be used **only once, at the very end** of the whole query.
+2. Both queries must have the **same number of columns**.
+3. The matching columns must have **compatible data types**.
+4. The columns must be in the **same order**.
+5. The **first query controls the column names (aliases)** of the final result.
+6. **Map the correct columns yourself.** SQL only checks count and data types. If you swap `FirstName` and `LastName` in one query, you get no error, just wrong data.
+
+## Syntax
+
+```sql
+SELECT column1, column2 FROM table_a
+<UNION | UNION ALL | EXCEPT | INTERSECT>
+SELECT column1, column2 FROM table_b
+ORDER BY column1;   -- only once, at the end
+```
+
+## Worked example
+
+Illustrative data (not from a real table). Employees and customers, compared on `FirstName` and `LastName`:
+
+| Employees (A) | Customers (B) |
+|---|---|
+| Anna Lee | Ben Ray |
+| Ben Ray | Carl Fox |
+| Carl Fox | Dina Roy |
+
+| Query | Result |
+|---|---|
+| `A UNION B` | Anna Lee, Ben Ray, Carl Fox, Dina Roy (4 rows) |
+| `A UNION ALL B` | All 6 rows, Ben Ray and Carl Fox appear twice |
+| `A EXCEPT B` | Anna Lee |
+| `B EXCEPT A` | Dina Roy |
+| `A INTERSECT B` | Ben Ray, Carl Fox |
+
+## UNION
+
+Returns all **distinct** rows from both queries. Duplicates are removed.
+
+```sql
+-- Look at the tables first
+SELECT * FROM Sales.Customers;
+SELECT * FROM Sales.Employees;
+
+-- Combine employees and customers
+SELECT FirstName, LastName FROM Sales.Customers
+UNION
+SELECT FirstName, LastName FROM Sales.Employees;
+```
+
+## UNION ALL
+
+Returns **all** rows from both queries, including duplicates. Faster than `UNION`.
+
+```sql
+SELECT FirstName, LastName FROM Sales.Customers
+UNION ALL
+SELECT FirstName, LastName FROM Sales.Employees;
+```
+
+## EXCEPT (MINUS)
+
+Returns distinct rows from the **first** query that are **not found** in the second. Swapping the queries changes the result.
+
+```sql
+-- Employees who are not customers
+SELECT FirstName, LastName FROM Sales.Employees
+EXCEPT
+SELECT FirstName, LastName FROM Sales.Customers;
+
+-- Customers who are not employees
+SELECT FirstName, LastName FROM Sales.Customers
+EXCEPT
+SELECT FirstName, LastName FROM Sales.Employees;
+```
+
+## INTERSECT
+
+Returns only the rows that appear in **both** queries.
+
+```sql
+-- People who are both employees and customers
+SELECT FirstName, LastName FROM Sales.Employees
+INTERSECT
+SELECT FirstName, LastName FROM Sales.Customers;
+```
+
+## Use case: combine Orders and OrdersArchive
+
+Both tables have the same columns, so they can be stacked into one result.
+
+```sql
+SELECT OrderID, ProductID, CustomerID, SalesPersonID, OrderDate, ShipDate,
+       OrderStatus, ShipAddress, BillAddress, Quantity, Sales, CreationTime
+FROM Sales.Orders
+UNION
+SELECT OrderID, ProductID, CustomerID, SalesPersonID, OrderDate, ShipDate,
+       OrderStatus, ShipAddress, BillAddress, Quantity, Sales, CreationTime
+FROM Sales.OrdersArchive;
+```
+
+### Tag each row with its source table
+
+Add a constant column to each query so you can tell where every row came from.
+
+```sql
+SELECT 'Orders' AS SourceTable,
+       OrderID, ProductID, CustomerID, SalesPersonID, OrderDate, ShipDate,
+       OrderStatus, ShipAddress, BillAddress, Quantity, Sales, CreationTime
+FROM Sales.Orders
+UNION
+SELECT 'Orders Archive' AS SourceTable,   -- the first query's alias wins
+       OrderID, ProductID, CustomerID, SalesPersonID, OrderDate, ShipDate,
+       OrderStatus, ShipAddress, BillAddress, Quantity, Sales, CreationTime
+FROM Sales.OrdersArchive;
+```
+
+> **Tip:** because the source label makes every row different, `UNION` finds nothing to remove between the two tables and only adds the cost of checking. `UNION ALL` gives the same rows, faster.
+
+> **Tip:** list the columns explicitly instead of using `SELECT *`. If someone adds a column to one table later, `SELECT *` breaks the set operation.
+
+## Delta detection with EXCEPT
+
+**Delta detection** means finding the differences (changes) between two batches of data, for example yesterday's load and today's load.
+
+Run `EXCEPT` in both directions:
+
+```sql
+-- Placeholder table names: replace with your own old and new batches
+
+-- New or changed rows: in the new batch, not in the old one
+SELECT * FROM Staging.Orders_New
+EXCEPT
+SELECT * FROM Staging.Orders_Old;
+
+-- Deleted or changed rows: in the old batch, not in the new one
+SELECT * FROM Staging.Orders_Old
+EXCEPT
+SELECT * FROM Staging.Orders_New;
+```
+
+| Result | Meaning |
+|---|---|
+| Row in new only | Inserted or changed |
+| Row in old only | Deleted or changed |
+| Row in both | Unchanged (not returned by either query) |
+
+A changed row shows up in both queries: its old version in the second, its new version in the first.
+
+## Summary
+
+- Set operators **stack rows** from two queries.
+- `UNION` removes duplicates, `UNION ALL` keeps them and is faster.
+- `EXCEPT` = first minus second (order matters). `INTERSECT` = common rows.
+- Same column count, compatible types, same order, first query names the columns, `ORDER BY` once at the end.
+- SQL won't catch swapped columns, so check the mapping yourself.
+- `EXCEPT` in both directions detects changes between two batches.
+
+
 # Rules :
 
 1 order by can be used only once at the end of column
