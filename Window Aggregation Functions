@@ -68,6 +68,59 @@ partition can done based on the product type
  Task 1 : find the total number of orders  and provide details such as orderid , order date
  select orderid, orderdate ,count(*)over() Total_orders from sales.orders
 
+select orderid,orderdate,customerid, count(*) over() totalorders,
+count(*) over(partition by customerid) orderbycustomers from sales.orders 
+
+---group wise anayysis to understand patterns with different categories----
+
+find the total number of customers and provide all customers details
+
+select * , count(*) over() totalcustomers from sales.customers
+
+find the total  no of scores for each customers
+
+---removes the null count---
+
+select * , count(*) over() totalcustomers, count(score) over() totalscores from sales.customers
+
+
+---data quality issue---
+
+1  check whether the data in table have duplicates
+select  * from sales.orders;
+select orderid, count(*) over(partition by orderid) checkpk from sales.orders
+select * from sales.OrdersArchive;
+
+select * from (select orderid, count(*) over(partition by orderid) checkpk from sales.ordersArchive)t where checkpk >1
+
+usecases :
+1 overall analysis
+2 category analysis
+3 quality checcks : identify Nulls
+4 quality checks
+
+
+----Sum() -- return sum of values within a window ----
+1 find the total slaes across all orders 
+and total sales for each produc, provide details such order id, orderdate
+
+select orderid,orderdate,sales,productid, sum(Sales) over(partition by productid) totalslaes,
+sum(sales) over(partition by productid) sa from sales.orders
+
+--- compare the current value and aggregatedd value of window functions---(part to whole) like highest avg month  in year 
+
+select orderid, productid, sales , sum(Sales) over () totalsales, cast(sales as float)/sum(sales) over()*100 from sales.orders
+
+---Avg()---return the avergae of values in each window
+
+--find the average sales foe each department--
+avg(coalesce(Sales,0)) over(partition by product)
+
+
+
+
+
+
 
 
 
