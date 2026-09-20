@@ -1,74 +1,198 @@
+SQL SELECT Basics — Quick Revision Notes
+The SELECT statement reads data from a table. Full coding skeleton: SELECT → DISTINCT → TOP → columns/aggregates → FROM → WHERE → GROUP BY → HAVING → ORDER BY You code it in one order, SQL runs it in another — see section 9️⃣ (this is the #1 source of bugs).
 
-select * from dbo.customers;
+🧠 Mind Map
+                          SELECT (read data)
+                                  │
+   ┌─────────┬─────────┬─────────┼──────────┬───────────┬───────────┐
+   │         │         │         │          │           │           │
+ FILTER     SORT      GROUP &   FILTER     UNIQUE     FIRST N     STATIC
+ rows      rows      AGGREGATE groups    values      rows        columns
+   │         │         │         │          │           │           │
+ WHERE    ORDER BY  GROUP BY  HAVING    DISTINCT     TOP n      literal
+ =, <>,   ASC/DESC  SUM,AVG,  (filters  (removes   + ORDER BY  AS alias
+ >, >=,   multi-key COUNT    aggregates) duplicates)           'new_customer'
+ <, <=,
+ !=
+1️⃣ SELECT — choose columns
+-- Everything
+SELECT * FROM dbo.customers;
+SELECT * FROM dbo.orders;
 
-select *from dbo.orders;
+-- Specific columns
+SELECT id, country FROM dbo.customers;
+SELECT id, country, score FROM dbo.customers;
+⚠️ Avoid SELECT * in real code — it pulls every column, breaks when the table changes, and is slower.
 
-select id,country from dbo.customers;
+2️⃣ WHERE — filter rows (before grouping)
+Condition = Expression Operator Expression
 
-select id, country,score from dbo.customers;
-----Where----
+Operator type	Operators
+Comparison	= <> != > >= < <=
+Logical	AND OR NOT
+Range	BETWEEN
+Membership	IN, NOT IN
+Search	LIKE
+-- Customers whose score is not zero
+SELECT * FROM dbo.customers WHERE score != 0;
 
-select * from dbo.customers where score != 0;
+-- Exact match (text in single quotes — case usually doesn't matter in SQL Server)
+SELECT * FROM dbo.customers WHERE country = 'Germany';
 
-select * from dbo.customers where country = 'Germany';
+-- Filter first, then pick only 2 columns
+SELECT first_name, country
+FROM dbo.customers
+WHERE country = 'germany';
+3️⃣ ORDER BY — sort rows
+ASC = ascending (lowest first) — this is the default
+DESC = descending (highest first)
+Can sort by multiple keys: sorts by the first, ties broken by the second, ...
+-- Lowest score first
+SELECT * FROM dbo.customers ORDER BY score ASC;
 
-select first_name, country from dbo.customers where country ='germany'
+-- Highest score first
+SELECT * FROM dbo.customers ORDER BY score DESC;
 
-----order by----
+-- Sort by country A→Z, and within each country highest score first
+SELECT * FROM dbo.customers ORDER BY country ASC, score DESC;
+4️⃣ GROUP BY — collapse rows into groups + aggregate
+Every column in SELECT must be either in GROUP BY or inside an aggregate function (SUM, COUNT, AVG, MIN, MAX).
 
----lowest score first---
-select* from dbo.customers order by score asc;
+-- Group by two columns
+SELECT first_name, country, SUM(score) AS total
+FROM dbo.customers
+GROUP BY country, first_name;
 
-----Highest score first--
-select* from dbo.customers order by score desc;
+-- One row per country: total score + number of customers
+SELECT country,
+       SUM(score)  AS total_score,
+       COUNT(id)   AS no_customers
+FROM dbo.customers
+GROUP BY country;
+5️⃣ HAVING — filter groups (AFTER aggregation)
+⚠️ WHERE vs HAVING
 
----Nested sorted by----
-select * from dbo.customers order by country asc , score desc
+WHERE filters rows → runs BEFORE GROUP BY → cannot use aggregates
+HAVING filters groups → runs AFTER GROUP BY → CAN use aggregates
+-- Countries whose TOTAL score exceeds 800
+SELECT country, SUM(score) AS Total_score
+FROM dbo.customers
+GROUP BY country
+HAVING SUM(score) > 800;
 
----Group By----
+-- WHERE + HAVING together: only rows with score > 400,
+-- then only groups whose total still exceeds 800
+SELECT country, SUM(score) AS Total_score
+FROM dbo.customers
+WHERE score > 400
+GROUP BY country
+HAVING SUM(score) > 800;
 
-select first_name,country,sum(score) as total from dbo.customers group by country, first_name;
+-- Average score per country (ignoring zeros)
+SELECT country, AVG(score) AS Average
+FROM dbo.customers
+WHERE score != 0
+GROUP BY country;
 
-select country,sum(score)as total_score,count(id) as no_customers from dbo.customers  group by country;
+-- ...and keep only countries averaging above 430
+SELECT country, AVG(score) AS Average
+FROM dbo.customers
+WHERE score != 0
+GROUP BY country
+HAVING AVG(score) > 430;
+6️⃣ DISTINCT — remove duplicate values
+-- One row per unique country
+SELECT DISTINCT country FROM dbo.customers;
+DISTINCT applies to the whole selected row combination, not one column. SELECT DISTINCT country, city removes duplicate (country, city) pairs.
 
------Having----
+7️⃣ TOP — first N rows (SQL Server)
+⚠️ TOP without ORDER BY is meaningless — SQL returns arbitrary rows. Always pair TOP with ORDER BY.
 
-select country,sum(score) as Total_score from dbo.customers group by country having sum(score)> 800;
+-- ⚠️ Arbitrary 3 rows — no order defined
+SELECT TOP 3 country, id FROM dbo.customers;
+SELECT TOP 3 * FROM dbo.customers;
 
-select country,sum(score) as Total_score from dbo.customers where score >400 group by country having sum(score)> 800;
+-- ✅ Top 3 highest scores
+SELECT TOP 3 * FROM dbo.customers ORDER BY score DESC;
 
-select country, avg(score) as Average  from dbo.customers where score!=0 group by country;
+-- ✅ Bottom 3 scores
+SELECT TOP 3 * FROM dbo.customers ORDER BY score ASC;
 
-select country, avg(score) as Average  from dbo.customers where score!=0 group by country having avg(score) >430;
+-- Earliest orders first (TOP works on any sortable column, incl. dates)
+SELECT * FROM dbo.orders ORDER BY order_date ASC;
+Other databases: MySQL/PostgreSQL use LIMIT n, Oracle uses FETCH FIRST n ROWS ONLY.
 
---Distinct---
+8️⃣ Static values (literals) as columns
+You can output a fixed value for every row and give it a name with AS:
 
-select Distinct country from dbo.customers
+-- Every row gets a column customer_type = 'new_customer'
+SELECT id, first_name, 'new_customer' AS customer_type
+FROM dbo.customers;
+Note: alias typo (customer_typr) is fixed above — aliases only affect the output column name, not the data.
 
------Top-----
+9️⃣ ⭐ Execution Order vs Coding Order
+The single most important thing in this file. You write clauses in one order, but SQL Server executes them in a different order:
 
-select Top 3 country , id from dbo.customers;
-select Top 3*  from dbo.customers
+CODING order (how you WRITE it):
 
-select Top 3 * from dbo.customers order by score desc;
+  SELECT  →  DISTINCT  →  TOP  →  aggregates  →  FROM  →  WHERE  →  GROUP BY  →  HAVING  →  ORDER BY
 
-select Top 3 * from dbo.customers order by score asc;
+EXECUTION order (how SQL RUNS it):
+
+  FROM  →  WHERE  →  GROUP BY  →  HAVING  →  SELECT/DISTINCT  →  ORDER BY  →  TOP
+
+  ①  FROM          — get the table
+  ②  WHERE         — filter individual rows (no aggregates allowed yet)
+  ③  GROUP BY      — collapse rows into groups
+  ④  HAVING        — filter the groups (aggregates now available)
+  ⑤  SELECT/DISTINCT — compute output columns, drop duplicates
+  ⑥  ORDER BY      — sort the final result (can use SELECT aliases here)
+  ⑦  TOP           — keep only the first N rows of the sorted result
+Why this order explains common errors
+Error you hit	Why (execution order)
+Can't use aggregate in WHERE (e.g. WHERE SUM(score) > 800)	WHERE runs before GROUP BY — aggregates don't exist yet. Use HAVING.
+Can't use a SELECT alias in WHERE	WHERE runs before SELECT — the alias doesn't exist yet.
+Can use a SELECT alias in ORDER BY	ORDER BY runs after SELECT — the alias exists by then.
+TOP respects ORDER BY	ORDER BY runs before TOP.
+📋 Recap Table
+Clause	Purpose	Runs	Notes
+SELECT	Pick columns / compute output	⑤ (late)	* = all columns; AS renames
+FROM	Which table	① (first)	
+WHERE	Filter rows	②	No aggregates, no SELECT aliases
+GROUP BY	Collapse rows into groups	③	Non-aggregated columns must be listed
+HAVING	Filter groups	④	Aggregates allowed
+ORDER BY	Sort result	⑥	ASC default, DESC highest first
+DISTINCT	Remove duplicate rows	⑤	Applies to full row combination
+TOP n	Keep first N rows	⑦ (last)	Always pair with ORDER BY
+🃏 Flashcards (flip = answer below)
+Q: Filter rows before grouping? → A: WHERE
+Q: Filter groups after aggregation? → A: HAVING
+Q: WHERE or HAVING — which can use SUM()? → A: HAVING (runs after GROUP BY)
+Q: Default sort direction of ORDER BY? → A: ASC (ascending)
+Q: Sort by country A→Z and score high→low inside each country? → A: ORDER BY country ASC, score DESC
+Q: Remove duplicate values in output? → A: DISTINCT
+Q: First 3 highest scores in SQL Server? → A: SELECT TOP 3 * FROM t ORDER BY score DESC
+Q: Why is TOP without ORDER BY risky? → A: Rows come back in arbitrary order — you get random rows
+Q: First clause SQL executes? → A: FROM (then WHERE → GROUP BY → HAVING → SELECT → ORDER BY → TOP)
+Q: Output a fixed value on every row? → A: SELECT id, 'new_customer' AS customer_type FROM t
+Q: Rule for columns in SELECT with GROUP BY? → A: Every column is either in GROUP BY or inside an aggregate
+Q: Can ORDER BY use a SELECT alias? Can WHERE? → A: ORDER BY yes, WHERE no (it runs before SELECT)
 
 
-select * from dbo.orders order by order_date asc
+✅ Practice Checklist
+ Select specific columns instead of *
+ Filter with WHERE using =, !=, >, AND
+ Sort ascending, descending, and by two columns
+ Group by one column with SUM and COUNT
+ Filter groups with HAVING (e.g. HAVING SUM(score) > 800)
+ Combine WHERE + GROUP BY + HAVING in one query
+ Get unique country list with DISTINCT
+ Get top 3 and bottom 3 with TOP + ORDER BY
+ Add a static column with an AS alias
+ Recite the execution order from memory: FROM → WHERE → GROUP BY → HAVING → SELECT/DISTINCT → ORDER BY → TOP
 
 
-
-----Excecution  order vs coding orders ---
-
-# coding_order : select >> distinct >> top >>> aggregation >>> from >> where >>> group by >>> having >>> order by
-
-# Excecution_order:
- from >>> where>>> group by>>> having  >>> Distinct >>> order by >> Top 
-
----static values---
-
-select id, first_name, 'new_customer' as customer_typr from dbo.customers
-
-
-
+🔗 Related Notes
+SQL-NULL-Functions-Notes.md — NULL handling (works together with WHERE score IS NOT NULL filters)
+SQL-Operators-Notes.md — full operator reference used inside WHERE (=, AND, BETWEEN, IN, LIKE)
+SQL-DDL-Tables-Constraints-Notes.md — creating the tables these queries read from
