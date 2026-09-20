@@ -1,16 +1,123 @@
-use  Company;
-create table Employees
-(id int,
-name varchar(50),
-DeptID int,
-DeptName Varchar(40))
+SQL DML Statements — Notes
+DML = Data Manipulation Language. These statements work with the data inside tables (not the table structure itself — that's DDL like CREATE TABLE).
+
+The four core DML statements:
+
+INSERT — add new rows
+SELECT — read rows
+UPDATE — change existing rows
+DELETE — remove rows
+0. Setup (DDL — not DML, but needed first)
+USE Company;   -- choose the database (SQL Server / MySQL: USE; PostgreSQL: \c company)
+
+CREATE TABLE Employees (
+    id       INT,
+    name     VARCHAR(50),
+    DeptID   INT,
+    DeptName VARCHAR(40)
+);
+1. INSERT — add rows
+a) Insert one row, column list (recommended style):
 
 INSERT INTO Employees (id, name, DeptID, DeptName)
 VALUES (100, 'Akhila', 1, 'IT');
+b) Insert one row without naming columns (must give values for every column, in table order):
 
+INSERT INTO Employees
+VALUES (101, 'Ravi', 2, 'HR');
+c) Insert multiple rows at once:
 
-Update tableEmployees set EmployeeName ="Akhila" where id = 100;
+INSERT INTO Employees (id, name, DeptID, DeptName)
+VALUES
+    (102, 'Meena', 1, 'IT'),
+    (103, 'Arjun', 3, 'Finance'),
+    (104, 'Divya', 2, 'HR');
+d) Insert from another table (INSERT ... SELECT):
 
-delete tableEmployee where employeeId ='1001';
+INSERT INTO Employees_Backup (id, name)
+SELECT id, name
+FROM Employees
+WHERE DeptName = 'IT';
+Rules / notes:
 
+String and date values go in single quotes: 'Akhila'.
+Numbers have no quotes: 100.
+Columns with NOT NULL and no default must be provided.
+Omitted nullable columns become NULL.
+2. SELECT — read rows
+-- All columns, all rows
+SELECT * FROM Employees;
 
+-- Specific columns
+SELECT name, DeptName FROM Employees;
+
+-- With a filter
+SELECT * FROM Employees WHERE id = 100;
+
+-- Sorted
+SELECT name, DeptName FROM Employees ORDER BY name ASC;
+SELECT is sometimes listed under its own category (Data Query Language), but it's always taught together with DML.
+
+3. UPDATE — change existing rows
+UPDATE Employees
+SET name = 'Akhila R'
+WHERE id = 100;
+Update multiple columns:
+
+UPDATE Employees
+SET DeptID = 5,
+    DeptName = 'R&D'
+WHERE id = 100;
+Update many rows at once:
+
+UPDATE Employees
+SET DeptName = 'Information Technology'
+WHERE DeptID = 1;
+Rules / notes:
+
+⚠️ Never forget the WHERE clause. Without it, every row in the table is updated:
+UPDATE Employees SET name = 'Akhila';   -- renames EVERYONE!
+Use AND/OR to combine conditions: WHERE id = 100 AND DeptID = 1
+
+4. DELETE — remove rows
+DELETE FROM Employees
+WHERE id = 100;
+Delete with a condition:
+
+DELETE FROM Employees
+WHERE DeptName = 'HR';
+Delete all rows (keeps the table):
+
+DELETE FROM Employees;   -- ⚠️ no WHERE = deletes every row
+DELETE vs TRUNCATE:
+
+DELETE	TRUNCATE
+Type	DML	DDL
+WHERE clause	Yes	No
+Speed	Slower (row by row, logged)	Faster
+Fires triggers	Yes	No
+Rollback	Yes (in a transaction)	Usually not
+5. Fixing the mistakes in the original SQL
+Your pasted statements had errors. Here are the corrected versions:
+
+❌ Wrong	Problem	✅ Correct
+Update tableEmployees set EmployeeName ="Akhila" where id = 100;	Table is named Employees (not tableEmployees), column is name (not EmployeeName), and double quotes are used for strings	UPDATE Employees SET name = 'Akhila' WHERE id = 100;
+delete tableEmployee where employeeId ='1001';	Table name wrong (Employees), column wrong (id), missing FROM, and id is INT so no quotes	DELETE FROM Employees WHERE id = 1001;
+Key syntax habits:
+
+Correct table and column names — SQL names must match exactly what you created.
+Use single quotes '...' for strings; double quotes are reserved for identifiers in standard SQL.
+DELETE needs FROM: DELETE FROM table ...
+Numbers are unquoted: WHERE id = 1001 (not '1001').
+End every statement with a semicolon ;.
+6. Quick reference
+INSERT INTO table (col1, col2) VALUES (v1, v2);
+SELECT cols FROM table WHERE condition;
+UPDATE table SET col = value WHERE condition;
+DELETE FROM table WHERE condition;
+7. Practice exercises
+Insert yourself as an employee in the Finance department.
+Update the department name of employee 101 to 'Marketing'.
+Delete all employees in department 2.
+Write a query that finds every employee named 'Akhila'.
+Insert 3 rows in a single INSERT statement.
