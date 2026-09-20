@@ -1,5 +1,60 @@
 
-1. Aggregate Functions
+
+
+                         ┌──────────────────────────┐
+                         │   WINDOW FUNCTIONS       │
+                         └────────────┬─────────────┘
+                                      │
+          ┌───────────────────────────┼───────────────────────────┐
+          │                           │                           │
+          ▼                           ▼                           ▼
+ ┌──────────────────┐       ┌──────────────────┐       ┌──────────────────┐
+ │   AGGREGATE      │       │      RANK        │       │ VALUE / ANALYTIC  │
+ │   FUNCTIONS      │       │    FUNCTIONS     │       │    FUNCTIONS      │
+ └────────┬─────────┘       └────────┬─────────┘       └────────┬─────────┘
+          │                          │                          │
+          ▼                          ▼                          ▼
+      COUNT()                   ROW_NUMBER()                  LEAD()
+      SUM()                     RANK()                        LAG()
+      AVG()                     DENSE_RANK()                  FIRST_VALUE()
+      MIN()                     CUME_DIST()                   LAST_VALUE()
+      MAX()                     PERCENT_RANK()
+                                NTILE()
+          │                          │                          │
+          └──────────────────────────┼──────────────────────────┘
+                                     ▼
+                              ┌──────────────┐
+                              │   OVER()     │
+                              └──────┬───────┘
+                                     │
+                 ┌───────────────────┼───────────────────┐
+                 │                   │                   │
+                 ▼                   ▼                   ▼
+          PARTITION BY           ORDER BY              FRAME
+                 │                   │                   │
+                 ▼                   ▼                   ▼
+          Divides into          Creates order      Subset of rows
+          windows/groups        /sequence           inside window
+                                     │
+                              ┌──────┴──────┐
+                              │             │
+                             ROWS         RANGE
+                              │
+             ┌────────────────┼────────────────┐
+             │                │                │
+             ▼                ▼                ▼
+       PRECEDING          CURRENT ROW       FOLLOWING
+             │                │                │
+             └────────────────┼────────────────┘
+                              ▼
+                    ┌──────────────────────┐
+                    │ Window Calculations  │
+                    └──────────────────────┘
+                              │
+          ┌───────────────────┼────────────────────┐
+          ▼                   ▼                    ▼
+     Running Total       Moving Average       Top-N / Ranking1. Aggregate Functions
+
 
 Input → multiple values | Output → single value
 
@@ -359,3 +414,6 @@ select orderid, orderdate,orderstatus, sum(sales) over(partition by orderstatus 
 
 normalrow : rows between current row and 2 following
 short form : rows 2 following
+
+
+
