@@ -1,5 +1,184 @@
 
-aggregate functions: sum, avg,count, min, max  --- input is multiple values and output is single value
+1. Aggregate Functions
+
+Input → multiple values | Output → single value
+
+SUM()   AVG()   COUNT()   MIN()   MAX()
+
+Example:
+SELECT COUNT(*) AS total_orders,
+       SUM(sales) AS total_sales,
+       AVG(sales) AS avg_sales,
+       MIN(sales) AS lowest_sales,
+       MAX(sales) AS highest_sales
+FROM sales.orders;
+
+2. GROUP BY vs Window Function
+
+GROUP BY
+
+Window Function
+
+Changes granularity
+
+Keeps original granularity
+
+One row per group
+
+Result for every row
+
+Aggregation
+
+Aggregation + details
+
+GROUP BY productid
+
+OVER(PARTITION BY productid)
+
+GROUP BY example:
+
+SELECT productid, SUM(sales)
+FROM sales.orders
+GROUP BY productid;
+
+Window example:
+
+SELECT orderid, productid, sales,
+       SUM(sales) OVER(PARTITION BY productid) AS product_total
+FROM sales.orders;
+
+Remember: GROUP BY = collapse rows | WINDOW = keep rows
+
+3. Three Main Types of Window Functions
+
+Aggregate: COUNT, SUM, AVG, MIN, MAX
+Ranking: ROW_NUMBER, RANK, DENSE_RANK, CUME_DIST, PERCENT_RANK, NTILE
+Value / Analytic: LEAD, LAG, FIRST_VALUE, LAST_VALUE
+
+4. OVER()
+
+OVER() tells SQL to treat the function as a window function.
+
+Entire table:
+SUM(sales) OVER()
+
+Separate window for each product:
+SUM(sales) OVER(PARTITION BY productid)
+
+5. PARTITION BY
+
+PARTITION BY divides rows into groups/windows. It does NOT remove rows.
+
+SUM(sales) OVER(PARTITION BY productid)
+SUM(sales) OVER(PARTITION BY productid, orderstatus)
+
+6. Window Function Syntax
+
+FUNCTION(expression) OVER (
+    PARTITION BY column
+    ORDER BY column
+    ROWS/RANGE frame
+)
+
+PARTITION BY → Which group/window?
+ORDER BY → What order/sequence?
+FRAME → Which rows within that sequence?
+
+7. Important Window Function Rules
+
+1. Window functions are generally used in SELECT and ORDER BY; to filter their result, use a subquery or CTE.
+
+2. Window functions cannot be directly nested inside another window function.
+
+3. Conceptually, WHERE filtering happens before the window calculation.
+
+4. Window functions can be used with GROUP BY, provided the query's grouping/aggregation logic is valid.
+
+8. Window Function Arguments
+
+Argument type
+
+Example
+
+Meaning
+
+Empty
+
+RANK()
+
+Function needs no argument
+
+Column/expression
+
+AVG(sales)
+
+Pass a column/expression
+
+Number
+
+NTILE(2)
+
+Pass a number
+
+Multiple
+
+LEAD(sales, 2, 10)
+
+Expression, offset, default
+
+Conditional
+
+SUM(CASE WHEN sales > 100 THEN 1 ELSE 0 END)
+
+CASE inside the window function
+
+9. Window Frames
+
+A frame defines the subset of rows used inside a window.
+
+Running total:
+
+SUM(sales) OVER(ORDER BY orderdate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+
+Current + next 2:
+
+SUM(sales) OVER(ORDER BY orderdate ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING)
+
+Previous 2 + current:
+
+SUM(sales) OVER(ORDER BY orderdate ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)
+
+Previous + current + next:
+
+SUM(sales) OVER(ORDER BY orderdate ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+
+Entire partition:
+
+SUM(sales) OVER(ORDER BY orderdate ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+
+10. Frame Boundaries
+
+Starting boundaries: UNBOUNDED PRECEDING | N PRECEDING | CURRENT ROW
+Ending boundaries: CURRENT ROW | N FOLLOWING | UNBOUNDED FOLLOWING
+
+11. Frame Shortcuts
+
+ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING  →  ROWS 2 FOLLOWING
+ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW  →  ROWS UNBOUNDED PRECEDING
+
+12. ROWS vs RANGE
+
+ROWS = physical row positions.
+RANGE = logical/value-based range and considers peer rows with the same ordering value.
+
+13. Quick Interview Mental Model
+
+1. Which group? → PARTITION BY
+2. In what order? → ORDER BY
+3. Which rows participate? → ROWS/RANGE
+
+GROUP BY = changes granularity
+WINDOW = keeps granularityaggregate functions: sum, avg,count, min, max  --- input is multiple values and output is single value
 
 select count(*) as total_orders, sum(sales) as total_sales,avg(sales)as avg_sales,min(sales) as lowest_sales, max(sales) as high_sales   from sales.orders
 
