@@ -1,87 +1,136 @@
-Operators
+SQL Operators — Quick Revision Notes
+An operator combines values/expressions into a condition. A condition = Expression + Operator + Expression WHERE keeps only the rows where the condition is TRUE.
 
-comparison operator : = <> != > >= < <=
+🧠 Mind Map
+                          SQL OPERATORS
+                                │
+    ┌──────────────┬────────────┼──────────────┬───────────────┐
+    │              │            │              │               │
+ COMPARISON    LOGICAL       RANGE        MEMBERSHIP       SEARCH
+ compare 2     combine       check if      check if a     pattern match
+ values        conditions    value is in   value is in    with LIKE
+    │          (AND/OR/NOT)  a range       a list         (% and _)
+ = <> != > >= < <=                            IN / NOT IN
+    │              │            │              │               │
+ one row        many         score         country        'M%'
+ condition      conditions   BETWEEN       IN ('DE','US') 'M_RIA'
+              short-circuit  100 AND 500   (OR shorthand)  _ = 1 char
+1️⃣ Comparison Operators — compare two values
+Operator	Meaning	Example
+=	equal	country = 'Germany'
+<> / !=	not equal	country <> 'Germany'
+>	greater than	score > 500
+>=	greater than or equal	score >= 500
+<	less than	score < 500
+<=	less than or equal	score <= 500
+SELECT * FROM customers WHERE country = 'Germany';
+SELECT * FROM customers WHERE country != 'Germany';
 
-Logical operator : AND OR NOT
+SELECT * FROM customers WHERE score >  500;
+SELECT * FROM customers WHERE score >= 500;
+SELECT * FROM customers WHERE score <  500;
+SELECT * FROM customers WHERE score <= 500;
+💡 <> is the ANSI standard — works in every database. != also works nearly everywhere.
 
-Range Operator : Between 
+2️⃣ Logical Operators — combine conditions (AND / OR / NOT)
+Operator	TRUE when...
+AND	both sides are TRUE
+OR	at least one side is TRUE
+NOT	the condition is FALSE
+-- Both conditions must be true
+SELECT * FROM customers WHERE country = 'USA' AND score > 500;
 
-Membership Operator : IN NOT IN
+-- Either condition can be true
+SELECT * FROM customers WHERE country = 'USA' OR score > 500;
 
-Search Operator Like
+-- NOT flips the condition (same as score >= 500)
+SELECT * FROM customers WHERE NOT score < 500;
+⚡ Precedence (order of evaluation)
+NOT  >  AND  >  OR
+(highest)          (lowest)
+-- AND binds tighter than OR:
+--   a OR b AND c   means   a OR (b AND c)
+-- Always use ( ) when mixing AND and OR!
+WHERE country = 'USA' OR (country = 'Germany' AND score > 500)
+3️⃣ BETWEEN — range check (boundaries are INCLUSIVE)
+BETWEEN low AND high   -- includes both low AND high
+-- Both of these are exactly the same:
+SELECT * FROM customers WHERE score BETWEEN 100 AND 500;
+SELECT * FROM customers WHERE score >= 100 AND score <= 500;
+⚠️ Boundaries are INCLUSIVE — 100 and 500 themselves are included. 💡 Works with dates too: BETWEEN '2024-01-01' AND '2024-12-31'
 
+4️⃣ IN / NOT IN — membership in a list
+IN is just shorthand for multiple ORs.
 
-Operators
+-- These two are identical:
+SELECT * FROM customers WHERE country = 'Germany' OR country = 'USA';
+SELECT * FROM customers WHERE country IN ('Germany', 'USA');
 
-comparison operator : = <> != > >= < <=
+-- Exclude a list
+SELECT * FROM customers WHERE country NOT IN ('Germany', 'USA');
+💡 Cleaner and shorter than chained ORs — easy to read and easy to add values. ⚠️ NOT IN with a NULL in the list returns nothing (traps beginners) — filter NULLs out first.
 
-Logical operator : AND OR NOT
+5️⃣ LIKE — search with wildcards (pattern matching)
+Wildcard	Meaning
+%	any characters (zero, one, or many)
+_	exactly one character
+-- Starts with M
+SELECT * FROM customers WHERE first_name LIKE 'M%';
 
-Range Operator : Between 
+-- Ends with n
+SELECT * FROM customers WHERE first_name LIKE '%n';
 
-Membership Operator : IN NOT IN
+-- 3rd character is 'r', anything before/after
+SELECT * FROM customers WHERE first_name LIKE '__r%';
 
-Search Operator Like
+-- Exactly 4 letters, starting with M:  M_ _ _
+SELECT * FROM customers WHERE first_name LIKE 'M___';
 
+-- Contains 'ria' anywhere
+SELECT * FROM customers WHERE first_name LIKE '%ria%';
+📊 Pattern cheat table
+Pattern	Matches	Does NOT match
+M%	Maria, Mohan, M	Amara
+%n	Nayan, John, n	Nadia
+M_	Mo, Me	Moa (too long)
+_ _r%	Maria (aria), Sara	Ram (r is 1st char)
+%ria%	Maria, Gloria	Rita
+⚠️ LIKE is usually case-sensitive in PostgreSQL, case-insensitive in SQL Server/MySQL by default. ⚠️ LIKE '%...%' can't use indexes → slow on big tables.
 
-comparison operator : = <> != > >= < <=
+📋 One-Page Recap Table
+Category	Operators	Purpose	Example
+Comparison	= <> != > >= < <=	Compare 2 values	score >= 500
+Logical	AND OR NOT	Combine conditions	country='USA' AND score>500
+Range	BETWEEN ... AND ...	Value inside a range (inclusive)	score BETWEEN 100 AND 500
+Membership	IN / NOT IN	Value in a list (shorthand for OR)	country IN ('Germany','USA')
+Search	LIKE + % _	Pattern matching	first_name LIKE 'M%'
+🗂️ Flashcards (self-test)
+Q: Difference between <> and !=? A: None — both mean "not equal". <> is the ANSI standard.
 
-Condition: Expression Operator Expression
+Q: Is BETWEEN 100 AND 500 inclusive? A: Yes — includes both 100 and 500.
 
-select * from customers where country = 'germany'
-select * from customers where country != 'germany'
+Q: Which is faster to write: 3 chained ORs or IN? A: IN — same result, cleaner and easier to maintain.
 
-select * from Customers where score >500;
+Q: What does % match in LIKE? A: Any number of characters (zero, one, or many). _ matches exactly one.
 
-select * from Customers where score >=500;
+Q: Pattern for a name ending with "n"? A: LIKE '%n'
 
-select * from Customers where score < 500;
+Q: Pattern for 3rd letter = "r"? A: LIKE '__r%' (two underscores, then r, then anything)
 
-select * from Customers where score <=500;
+Q: When mixing AND and OR, what must you use? A: Parentheses () — AND binds tighter than OR.
 
----Logical Operator--- And Or NOt BETWEEN
+Q: NOT score < 500 is the same as...? A: score >= 500
 
-select * from customers where country ='USA' and Score >500 ;
-select * from customers where country ='USA' or Score >500 ;
-select * from customers where  Score >= 500 ;
-
-select * from customers where NOT Score <  500 ;
-
-
---BETWEEN-- BOUNDARIES ARE INCLUSIVE 
-
-
-SELECT * from customers where score between 100 and 500 ;
-
-select * from customers where score >= 100 AND  score <=500
-
-
----in and not in---
-
-
-
-select * from customers where country ='Germany' or country ='USA';
-
-select * from customers where country in ('Germany','USA');
-
----Like---
-
-% anything (0, 1, more)  m%
-, _exact 1 M_RIA
-
-select * from customers where first_name like 'M%'
-
-select * from customers where first_name like '%n'
-
-select * from customers where first_name like '__r%'
-
-
-
-
-
-
-
-
-
-
-
+✅ Practice Checklist
+ Filter rows with =, !=, >, >=, <, <=
+ Combine two conditions with AND, then with OR
+ Rewrite NOT score < 500 without NOT
+ Rewrite score >= 100 AND score <= 500 using BETWEEN
+ Rewrite three ORs on the same column using IN
+ Use LIKE 'M%', LIKE '%n', and LIKE '__r%'
+ Mix AND/OR with parentheses and predict the result
+🧩 Connect to previous notes
+Topic	Rule to remember
+NULLs	Comparisons with NULL (= NULL, > NULL) return UNKNOWN → row is filtered out. Use IS NULL instead.
+NULLs	NOT IN (list with NULL) returns nothing — clean NULLs first with IS NOT NULL.
+LIKE + NULL	column LIKE '%x%' never matches NULL values.
