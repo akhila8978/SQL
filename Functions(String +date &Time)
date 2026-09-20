@@ -1,247 +1,283 @@
----String Functions---
-for data transformation, analyze, manipulate and clean data
+SQL Notes — String & Date/Time Functions
+Built for data transformation, analysis, manipulation and cleaning of data. Examples use dbo.customers, Sales.Orders, and Sales.Employees.
 
-types : 1 single row functions : input single value---> functions ----> single value output
-String functions , numeric, DATE & Time , null 
-      
-: 2 multi row functions  : input multiple values ----> function  ---> single output
-  Window fuinctions,aggregate functions.
+1. Types of Functions
+Single-row functions take one value in and return one value per row; multi-row (aggregate/window) functions take many values in and return one overall result. Nested functions chain outputs into inputs.
 
-Nested functions: Input of one function is output for the next function
+                        SQL FUNCTIONS
+                             |
+        ┌────────────────────┴─────────────────────┐
+        ▼                                          ▼
+┌──────────────────┐                      ┌──────────────────┐
+│  SINGLE-ROW      │                      │  MULTI-ROW       │
+│  input: 1 value  │                      │  input: N values │
+│  output: 1 value │                      │  output: 1 value │
+└────────┬─────────┘                      └────────┬─────────┘
+         │                                         │
+   ┌─────┼──────────────┬──────────────┐            │
+   ▼     ▼              ▼              ▼            ▼
+String  Numeric    Date & Time      NULL      • Aggregate (SUM, AVG…)
+                                                  • Window (LAG, OVER…)
+Nested functions — the output of one function is the input of the next:
 
-String FUnctions:
+Left(Trim(first_name), 2)      -- Trim runs first, then Left
+value ──► Trim ──► Left ──► result
+        (inner)   (outer)      -- innermost executes first
+2. String Functions — Mind Map
+                      ┌─────────────────────┐
+                      │  STRING FUNCTIONS   │
+                      └──────────┬──────────┘
+                                 │
+        ┌────────────────┬───────┴───────┬──────────────────┐
+        ▼                ▼               ▼                  ▼
+ ┌─────────────┐  ┌─────────────┐ ┌──────────────┐  ┌──────────────┐
+ │MANIPULATION │  │ CALCULATION │ │  EXTRACTION  │  │   REPLACE    │
+ └──────┬──────┘  └──────┬──────┘ └──────┬───────┘  └──────┬───────┘
+        │                │               │                 │
+  CONCAT • UPPER   LEN        LEFT • RIGHT        REPLACE
+  LOWER • TRIM                SUBSTRING           (also removes!)
+2.1 CONCAT — join values together
+SELECT first_name,
+       country,
+       CONCAT(first_name, country) AS name_country
+FROM dbo.customers;
+2.2 UPPER / LOWER — change case
+SELECT first_name,
+       CONCAT(first_name, country)       AS name_country,
+       UPPER(first_name)                 AS upper_name,
+       LOWER(first_name)                 AS lower_name
+FROM dbo.customers;
+2.3 TRIM — removes leading & trailing spaces
+-- find rows where the stored value has stray spaces
+SELECT first_name
+FROM customers
+WHERE first_name != Trim(first_name);
+2.4 LEN — length of the string
+SELECT first_name,
+       LEN(first_name) AS len_name
+FROM customers;
+2.5 REPLACE — replace or remove a substring
+-- replace
+SELECT '123-456-7890',
+       REPLACE('123-456-7890', '-', '/') AS clean_phone;
 
-MANipulation: concat, upper,Lower, Trim,Replace.
-Caluculation: Len 
-String Extraction : Left Right,Substring
+-- remove (replace with empty string '')
+SELECT 'report.txt',
+       REPLACE('report.txt', '.txt', '.csv') AS new_filename;
+2.6 LEFT / RIGHT — extract from the edges
+LEFT(value, n) → first n characters · RIGHT(value, n) → last n characters
 
----> Concat:
+SELECT first_name,
+       LEFT(TRIM(first_name), 2) AS first_2_char,
+       RIGHT(first_name, 2)      AS last_2_char
+FROM customers;
+2.7 SUBSTRING — extract from the middle
+SUBSTRING(value, start, length) — start is 1-based.
 
-select first_name,country,concat(first_name,country) as name_country
-from dbo.customers;
+SELECT first_name,
+       SUBSTRING(first_name, 2, 4) AS sub_name
+FROM customers;
+-- 'Akhila' → 'khil'  (start at char 2, take 4 chars)
+2.8 ROUND & ABS (quick numeric side-note)
+SELECT 3.156, ROUND(3.156, 2) AS round_2;   -- 3.160
+SELECT -10, ABS(10), ABS(-10);               -- -10, 10, 10
+3. Date & Time — The Basics
+A timestamp = Date + Time:
 
-------> Upper: select first_name,country,concat(first_name,country) as name_country, Upper(First_name) as Upper_name
-from dbo.customers; 
+ 2026-08-20  18:55:45
+ └────┬────┘ └───┬──┘
+     date       time
+ year-month-day  Hours:Minutes:Seconds
+Format used by Oracle, PostgreSQL, MySQL.
 
--------> Lower:select first_name,country,concat(first_name,country) as name_country, Lower(First_name) as low_name
-from dbo.customers;
+SELECT orderid, orderdate, shipdate, creationTime
+FROM Sales.Orders;
 
---------> Trim: removes leading and trailing spaces
-
-select first_name From customers where first_name!= Trim(first_name)
-
---------- > Len:
-select first_name, len(first_name) as len_name from customers;
-
-
------------> Replace:not only replace but also remove
-
-select '123-456-7890', replace('123-456-7890', '-','/') as clean_phone
-
-select 'report.txt', Replace('report.txt','.txt','.csv') as new_filename;
-
---left(value,Nr of character), Right(value,nr of characters)--
-
-select first_name,Left(Trim(first_name),2) first_2_char,Right(first_name,2) last_2_char from customers;
-
-
----Substring---
-
-substring(value,start,length)
-
-SElect first_name,SUBSTRING(first_name,2,4) as sub_name from customers
-
-------> Round , ABS-----< 
-
-select 3.156, round(3.156,2) as round_2
-select -10, abs(10),abs(-10) 
-
----date and Time---
-
-Time stamp :  2026-08-20     18:55:45
-              year-mont-day Hours:Minutes:seconds
-               Date            Time
-for oracle,postgrel, mYsql
-
-select orderid, orderdate, shipdate, creationTime from Sales.Orders;
-
-select * from Sales.Orders
-
-
-
-----Date and Time functions------
-
+SELECT * FROM Sales.Orders;
+Date & Time Functions — Mind Map
                          ┌─────────────────────┐
                          │  Date & Time        │
                          │     Functions       │
                          └──────────┬──────────┘
                                     │
         ┌───────────────┬───────────┼───────────┬───────────────┐
-        │               │           │           │
-        ▼               ▼           ▼           ▼
- ┌────────────┐  ┌────────────┐ ┌────────────┐ ┌────────────┐
- │    Part    │  │  Format &  │ │Calculations│ │ Validation │
- │ Extraction │  │  Casting   │ │            │ │            │
- └─────┬──────┘  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
-       │               │              │              │
-       ▼               ▼              ▼              ▼
- DAY • MONTH •     FORMAT •       DATEADD •       ISDATE
- YEAR • DATEPART   CONVERT •     DATEDIFF
- • DATENAME •      CAST
+        ▼               ▼           ▼           ▼               ▼
+ ┌────────────┐  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐
+ │    Part    │  │  Format &  │ │Calculations│ │ Validation │ │  Current   │
+ │ Extraction │  │  Casting   │ │            │ │            │ │  Time      │
+ └─────┬──────┘  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
+       │               │              │              │              │
+ DAY • MONTH •   FORMAT •      DATEADD •       ISDATE        GETDATE()
+ YEAR • DATEPART CONVERT •     DATEDIFF
+ • DATENAME •    CAST
  DATETRUNC •
  EOMONTH
-
-
-select Orderid,creationtime, YEAR(creationtime) year, month(creationtime) month,day(creationtime) day from sales.orders
-
-DAY()
-Month()
-year()
-
-datepart(part,date)
-date(month,orderdate) or date(mm,'2025-08-20')
-
-select Orderid,creationtime, datepart(year,creationtime) year_dp,
-datepart(month,creationtime) month_dp,datepart(day,creationtime) day_dp,datepart(hour,creationtime) Hour_dp,datepart(quarter,creationtime) quarter_dp,datepart(week,creationtime) week_dp, YEAR(creationtime) year, month(creationtime) month,day(creationtime) day from sales.orders
-
----Datename---
-Datename(part,date)
-
-select Orderid,creationtime, Datename(month,creationtime) as D_Name,Datename(Weekday, creationtime)weekday_dn,datename(day,creationtime) day_dn,datepart(year,creationtime) year_dp,
-datepart(month,creationtime) month_dp,datepart(day,creationtime) day_dp,datepart(hour,creationtime) Hour_dp,datepart(quarter,creationtime) quarter_dp,datepart(week,creationtime) week_dp, YEAR(creationtime) year, month(creationtime) month,day(creationtime) day
-from sales.orders
-
-
-DateTrunc(part,date) keep the required detail aprt as it is and other part will be reset to 00000
-
-Day part reset 01 and datepart reset to 00
-
-select Orderid,creationtime, Datetrunc(minute,creationtime) as minute_dt,datetrunc(day, creationtime) day_dt, Datetrunc(year,creationtime) year_dt,Datename(month,creationtime) as D_Name,Datename(Weekday, creationtime)weekday_dn,datename(day,creationtime) day_dn,datepart(year,creationtime) year_dp,
-datepart(month,creationtime) month_dp,datepart(day,creationtime) day_dp,datepart(hour,creationtime) Hour_dp,datepart(quarter,creationtime) quarter_dp,datepart(week,creationtime) week_dp, YEAR(creationtime) year, month(creationtime) month,day(creationtime) day
-from sales.orders
-
-
-select dateTrunc(year,creationtime),count(*) from sales.orders group by dateTrunc(year,creationtime);
-select dateTrunc(Month,creationtime),count(*) from sales.orders group by dateTrunc(Month,creationtime);
-
-Eomonth() --last day of month output is date
-
-Eomonth(Date)
-
-select orderid,creationtime,eomonth(creationtime) endofmonth from sales.orders
-
-----first day of month----y 
-
-select orderid,creationtime,eomonth(creationtime) endofmonth, cast(dateTrunc(month,creationtime)as date) as startofmonth from sales.orders
-
-
-
-usecases :
-
-for reports if we want to filter out order placed in the partickular year or month
-
-select year(orderdate) as sortbyyear,month(orderdate),count(*) nrorders from sales.orders group by year(orderdate),month(orderDate);
-
----for getting name of month----
-select Datename(month, orderDate) as orderDate,count(*) Nroforders from sales.orders group by Datename(month,orderdate)
-
----orders placed in feb month---
-
-select * from sales.orders where month(orderdate)=2
-
-----Datatypes of outputs---
-
-datepart ---int
-datename ---string
-datetrunc----datetime
-eomonth ------ date
-
-                  which part
-                      
-                      |
-          day, month             year         otherparts
-                |                   year()        datepart()
-        Numeric    full name
-        day()        datename()
-        month()
-
-
-
-
-formatting and convert() cast() ---for changing data types
-
-format(value, format[,culture]):
-
-Format(orderdate,'dd/MM/yyyy')
-
-select orderid,creationTime, Format(creationTime,'dd')dd, format(creationTime,'DDD')ddd,
-format(creationTime,'dddd') dddd from sales.orders
-
-Day Wed jan Q1 2025 12:34:56 PM
-
-select Orderid,creationTime,'Day '  + format(creationTime,'ddd  MMM ') +' Q' + Datename(quarter,creationTime) + ' ' +  format(creationTime, 'YYYY hh:mm:ss tt') as customerFormat from sales.orders
-
-
-getdate()
-
-
-convert:  default style is 0 
-convert(data_type,value[style])
-convert(Int, '124')
-convert(varchar, orderdate,'34')
-
-
-
-cast(value as data_type)
-
-cast('123', as INT) as 
-
-select cast('123' as INT) as STRING_INT,cast(123 as varchar) as intstring,
-cast('2025-02-23' as DATE) as stringDate, cast(creationtime as DATE) DAteTime from sales.orders
-
-casting: Used to convert any type to anytype and no formatting
-convert : any type to anytype   ----> formats only Datetime
-Format : anytype ---> Only string   ----> Formates date & time numbers
-
-
-----DATE ADD----
-for adding or substract DATE
-
-Dateadd(part,interval,date)
-DateADd(year,2,orderdate)
-DateADD(month, -4, orderdate)
-
-select orderid, Orderdate, dateadd(year, 2, orderdate) as orderrdate, DAteadd(month, 3, orderdate) Threeemonthslater,Dateadd(day,-10, orderdate) from sales.orders
-
-
------Date DIFF----
-DateDiff(part, start_date, end_date)
-DateDiff(year, orderdate, shipdate)
-
-----caluculating age)
-select * from sales.employees;
-select Employeeid,BirthDate,DateDIff(year, Birthdate, getdate())age from sales.employees;
-
-----average Shipping duration----
-
-select orderid, orderdate, shipdate from sales.orders
-
-
-select month(orderdate)orderdate,Avg(datediff(day,orderdate, shipdate))AS avgdaysship from sALES.ORDERS group by month(orderdate);
-
-----Time gap analysis-----
-
-select orderid,orderdate currentorderdate, lag(orderdate) over (order by orderdate) previousorderdate, datediff(day,Lag(orderdate) over(order by orderdate,orderdate), orderdate)nrofdays from sales.orders
-
-
-----isdate()-----
-
-isdate('2025-04-23')
-
-select isdate('123') datecheck
-select isdate('2023-09-23') datecheck
-
-
-
-
-
+4. Part Extraction Functions
+4.1 DAY / MONTH / YEAR
+SELECT orderid,
+       creationtime,
+       YEAR(creationtime)  AS year,
+       MONTH(creationtime) AS month,
+       DAY(creationtime)   AS day
+FROM sales.orders;
+4.2 DATEPART(part, date) — numeric part, more options
+datepart(month, orderdate) or datepart(mm, '2025-08-20')
+
+SELECT orderid,
+       creationtime,
+       DATEPART(year,    creationtime) AS year_dp,
+       DATEPART(month,   creationtime) AS month_dp,
+       DATEPART(day,     creationtime) AS day_dp,
+       DATEPART(hour,    creationtime) AS hour_dp,
+       DATEPART(quarter, creationtime) AS quarter_dp,
+       DATEPART(week,    creationtime) AS week_dp,
+       YEAR(creationtime)  AS year,
+       MONTH(creationtime) AS month,
+       DAY(creationtime)   AS day
+FROM sales.orders;
+4.3 DATENAME(part, date) — the part as text
+SELECT orderid,
+       creationtime,
+       DATENAME(month,   creationtime) AS d_name,      -- 'August'
+       DATENAME(weekday, creationtime) AS weekday_dn,  -- 'Thursday'
+       DATENAME(day,     creationtime) AS day_dn
+FROM sales.orders;
+4.4 Output datatype cheat-sheet ⚠️
+which part
+     │
+     ├── day, month, year ──► numeric        ──► day() month() year()  /  datepart()
+     └── other parts       ──► datepart()    (always numeric, int)
+             │
+             └── full name  ──► datename()   (always a STRING)
+Function	Output datatype
+DATEPART	int
+DATENAME	string
+DATETRUNC	datetime
+EOMONTH	date
+4.5 DATETRUNC(part, date) — truncate the rest to zero
+Keeps the required part as it is; everything below it is reset (day part → 01, time part → 00:00:00).
+
+SELECT orderid,
+       creationtime,
+       DATETRUNC(minute, creationtime) AS minute_dt,  -- seconds → 00
+       DATETRUNC(day,    creationtime) AS day_dt,     -- time → 00:00:00
+       DATETRUNC(year,   creationtime) AS year_dt     -- Jan 1, 00:00:00
+FROM sales.orders;
+Classic use — counting rows per period:
+
+SELECT DATETRUNC(year,  creationtime), COUNT(*) FROM sales.orders GROUP BY DATETRUNC(year,  creationtime);
+SELECT DATETRUNC(month, creationtime), COUNT(*) FROM sales.orders GROUP BY DATETRUNC(month, creationtime);
+4.6 EOMONTH(date) — last day of the month (returns a date)
+SELECT orderid,
+       creationtime,
+       EOMONTH(creationtime)                        AS endofmonth,
+       CAST(DATETRUNC(month, creationtime) AS DATE) AS startofmonth  -- first day of month
+FROM sales.orders;
+5. Real Use Cases
+1. Report of orders per year & month:
+
+SELECT YEAR(orderdate)  AS sortbyyear,
+       MONTH(orderdate) AS sortbymonth,
+       COUNT(*)         AS nrorders
+FROM sales.orders
+GROUP BY YEAR(orderdate), MONTH(orderdate);
+2. Order counts by month name:
+
+SELECT DATENAME(month, orderdate) AS ordermonth,
+       COUNT(*)                   AS nroforders
+FROM sales.orders
+GROUP BY DATENAME(month, orderdate);
+3. Orders placed in February:
+
+SELECT * FROM sales.orders WHERE MONTH(orderdate) = 2;
+6. Format & Casting — changing data types
+ CAST(value AS data_type)      any → any type, NO formatting
+ CONVERT(data_type, value [, style])   any → any type, formats DATETIME only (default style 0)
+ FORMAT(value, format [, culture])     any → STRING only, formats date/time AND numbers
+6.1 FORMAT(value, format[, culture])
+FORMAT(orderdate, 'dd/MM/yyyy')
+SELECT orderid,
+       creationTime,
+       FORMAT(creationTime, 'dd')   AS dd,    -- 20
+       FORMAT(creationTime, 'ddd')  AS ddd,   -- Wed
+       FORMAT(creationTime, 'dddd') AS dddd   -- Wednesday
+FROM sales.orders;
+Build a custom display string with concatenation:
+
+SELECT orderid,
+       creationTime,
+       'Day ' + FORMAT(creationTime, 'ddd  MMM ') +
+       ' Q' + DATENAME(quarter, creationTime) + ' ' +
+       FORMAT(creationTime, 'YYYY hh:mm:ss tt') AS customerFormat
+FROM sales.orders;
+-- → 'Day Wed Aug  Q3 2026 06:55:45 PM'
+6.2 CONVERT(data_type, value [, style])
+CONVERT(INT, '124')                 -- string → int
+CONVERT(VARCHAR, orderdate, '34')   -- date → string with style
+6.3 CAST(value AS data_type)
+SELECT CAST('123' AS INT)           AS string_int,
+       CAST(123 AS VARCHAR)         AS int_string,
+       CAST('2025-02-23' AS DATE)   AS string_date,
+       CAST(creationtime AS DATE)   AS datetime_to_date
+FROM sales.orders;
+7. DATEADD — add or subtract time
+DATEADD(part, interval, date) — use a negative interval to go back.
+
+SELECT orderid,
+       orderdate,
+       DATEADD(year,  2,  orderdate) AS two_years_later,
+       DATEADD(month, 3,  orderdate) AS three_months_later,
+       DATEADD(day,  -10, orderdate) AS ten_days_before
+FROM sales.orders;
+8. DATEDIFF — difference between two dates
+DATEDIFF(part, start_date, end_date)
+
+SELECT orderid, orderdate,
+       DATEDIFF(year, orderdate, shipdate) AS years_to_ship
+FROM sales.orders;
+Use case — calculating age:
+
+SELECT employeeid,
+       birthdate,
+       DATEDIFF(year, birthdate, GETDATE()) AS age
+FROM sales.employees;
+Use case — average shipping duration per month:
+
+SELECT MONTH(orderdate) AS ordermonth,
+       AVG(DATEDIFF(day, orderdate, shipdate)) AS avg_days_ship
+FROM sales.orders
+GROUP BY MONTH(orderdate);
+Use case — time-gap analysis between orders (uses LAG, a window function):
+
+SELECT orderid,
+       orderdate AS currentorderdate,
+       LAG(orderdate) OVER (ORDER BY orderdate) AS previousorderdate,
+       DATEDIFF(day,
+                LAG(orderdate) OVER (ORDER BY orderdate),
+                orderdate) AS nr_of_days
+FROM sales.orders;
+9. ISDATE — is this value a valid date?
+Returns 1 = valid, 0 = not a date.
+
+SELECT ISDATE('2025-04-23');   -- 1
+SELECT ISDATE('123')  AS datecheck;      -- 0
+SELECT ISDATE('2023-09-23') AS datecheck; -- 1
+10. Recap Card 🗂️
+┌──────────────────────── STRING ────────────────────────┐
+│ CONCAT  join values         UPPER / LOWER  case        │
+│ TRIM    strip spaces        LEN  length                 │
+│ LEFT(v,n) / RIGHT(v,n)      SUBSTRING(v, start, len)   │
+│ REPLACE(v, find, new)   -- also removes (new = '')     │
+└─────────────────────────────────────────────────────────┘
+┌─────────────────────── DATE/TIME ───────────────────────┐
+│ Extract : YEAR MONTH DAY  •  DATEPART (int)             │
+│           DATENAME (string)  •  DATETRUNC (datetime)    │
+│           EOMONTH (date)  +  CAST(DATETRUNC(month,…))   │
+│ Format  : CAST (no format) • CONVERT (+datetime styles) │
+│           FORMAT (→ string, dates & numbers)            │
+│ Math    : DATEADD(part, ±n, date)                       │
+│           DATEDIFF(part, start, end)  → age, durations  │
+│ Check   : ISDATE(value) → 1 / 0                         │
+│ Now     : GETDATE()                                     │
+└─────────────────────────────────────────────────────────┘
+Remember the output types: DATEPART → int · DATENAME → string · DATETRUNC → datetime · EOMONTH → date.
