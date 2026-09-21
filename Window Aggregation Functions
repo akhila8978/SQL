@@ -179,6 +179,26 @@ calculate moving average of sales for each product over time
 
 select orderid,productid,orderdate, sales,avg(Sales) over(partition by productid) avgbyproduct,avg(sales) over(partition by productid order by orderdate) Movingavg from sales.orders
 
+---Moving average ---
+calculate moving average of sales for each product over time
+
+select orderid,productid,orderdate, sales,avg(Sales) over(partition by productid) avgbyproduct,avg(sales) over(partition by productid order by orderdate) Movingavg,avg(Sales) over(partition by productid order by orderdate rows between current row and 1 following) Rollingavg from sales.orders
+
+
+---overall toatal and total per groups---
+
+overall total : overview of entire data sum(Sales) over()
+Total per groups : compare categories sum(Sales) over(partition by product)
+running total : progress over time   sum(Sales) over(order by month)
+Rolling total : progress over time within specific window  sum(Sales) over(order by month rows 2 precedings)
+
+
+
+
+
+
+
+
 
 
 
