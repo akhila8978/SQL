@@ -135,4 +135,57 @@ min() return the lowest value over window min(sales) over (partition by product)
 max() return the highest value over window max(sales) over (partition by product)
 
 
+---group wise analysis to understand pattern within different categories ---
+--finding average salesacross all orders and finding avg sales for each produc and also provide order id orederdate--
+
+select orderid, orderdate,sales, productid, avg(sales) over() avgsales, avg(Sales) over(partition by productid) avgsalesbyproduct from sales.orders
+
+task :find the average scores of customers and provide detials such customerid and lastname
+
+select * from sales.customers
+select customerid,lastname,score,coalesce(score,0)customerscore,avg(score) over()avgscore from sales.customers
+
+task2 : find all  orders where sales are hiher than the average sales across all orders
+
+select * from(select orderid,productid,sales,avg(sales) over() avgsales from sales.orders)t where sales > avgsales ;
+
+----Min max---
+
+min() return the lowest value over window min(sales) over (partition by product)
+max() return the highest value over window max(sales) over (partition by product)
+
+-- task 1 :find the highest and lowest sales of all orders and also for each product  and also provide details such as order id , order date
+
+select orderid,orderdate,productid,sales,max(sales) over() highestsales, min(sales) over() lowestsales,
+min(sales) over(partition by productid) lowestsalesbyproduct,max(sales) over(partition by productid) highestsalesbyproduct from sales.orders
+
+-- task2 show the employees who have highest emplpoyees
+
+select * from (select *,max(Salary) over()highestsalary from sales.employees) t where salary = highestsalary ;
+
+----standard deviation---
+
+select orderid,orderdate,productid,sales,max(sales) over() highestsales, min(sales) over() lowestsales,
+sales -min(sales) over() deviationfrommin,sales -max(sales) over() deviationfrommax from sales.orders
+
+
+----Running total & rolling total---
+Running total --- aggregate all values from the begining up to current point without dropping off older data  sum(Sales) over(order by month)  rows between unbounded precedings and current row
+Rolling total ---- aggregates all the values within the fixed time window (like 30 days) as new data ios added , the oldest dtaa point will be dropped.  sum(Sales) over(order by month rows between 2 precedings and current row)
+
+
+---Moving average ---
+calculate moving average of sales for each product over time
+
+select orderid,productid,orderdate, sales,avg(Sales) over(partition by productid) avgbyproduct,avg(sales) over(partition by productid order by orderdate) Movingavg from sales.orders
+
+
+
+
+
+
+
+
+
+
 
