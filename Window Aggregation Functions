@@ -196,12 +196,30 @@ Rolling total : progress over time within specific window  sum(Sales) over(order
 
 
 
+All-in-One Example
+SELECT
+    Product,
+    Sales,
+    COUNT(*) OVER(PARTITION BY Product)  AS Product_Count,
+    SUM(Sales) OVER(PARTITION BY Product)  AS Total_Sales,
+    AVG(Sales) OVER(PARTITION BY Product)  AS Avg_Sales,
+    MIN(Sales) OVER(PARTITION BY Product)  AS Min_Sales,
+    MAX(Sales) OVER(PARTITION BY Product)  AS Max_Sales
+FROM Sales;
 
 
 
-
-
-
+Quick Reference
+Goal	Window function
+Overall total	SUM(Sales) OVER()
+Total per group	SUM(Sales) OVER(PARTITION BY product)
+Running total	SUM(Sales) OVER(ORDER BY month)
+Rolling total	SUM(Sales) OVER(ORDER BY month ROWS 2 PRECEDING)
+Count incl. NULLs	COUNT(*) OVER(...)
+Count excl. NULLs	COUNT(column) OVER(...)
+Duplicates check	COUNT(*) OVER(PARTITION BY pk) > 1
+Above-average rows	WHERE sales > AVG(sales) OVER() (via subquery)
+Handle NULLs in avg	AVG(COALESCE(sales, 0)) OVER(...)
 
 
 
