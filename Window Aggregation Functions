@@ -115,12 +115,24 @@ select orderid, productid, sales , sum(Sales) over () totalsales, cast(sales as 
 
 --find the average sales foe each department--
 avg(coalesce(Sales,0)) over(partition by product)
+---group wise analysis to understand pattern within different categories ---
+--finding average salesacross all orders and finding avg sales for each produc and also provide order id orederdate--
 
+select orderid, orderdate,sales, productid, avg(sales) over() avgsales, avg(Sales) over(partition by productid) avgsalesbyproduct from sales.orders
 
+task :find the average scores of customers and provide detials such customerid and lastname
 
+select * from sales.customers
+select customerid,lastname,score,coalesce(score,0)customerscore,avg(score) over()avgscore from sales.customers
 
+task2 : find all  orders where sales are hiher than the average sales across all orders
 
+select * from(select orderid,productid,sales,avg(sales) over() avgsales from sales.orders)t where sales > avgsales ;
 
+----Min max---
+
+min() return the lowest value over window min(sales) over (partition by product)
+max() return the highest value over window max(sales) over (partition by product)
 
 
 
