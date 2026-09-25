@@ -1,1 +1,83 @@
 
+
+---Ranking Functions---
+
+---integrated ranking ----- DIscrete values
+ Row_number()
+ Rank()over(partition by productid order by sales)
+    empty    optional               must
+ dense_rank()
+ Ntile()
+      should have number 
+
+
+--percentage based ranking--- continuous values
+--cume_dist()
+--percent_rank()
+                         SQL WINDOW FUNCTIONS
+                                │
+                                ▼
+                         RANKING FUNCTIONS
+                                │
+        ┌───────────────────────┼────────────────────────┐
+        │                       │                        │
+        ▼                       ▼                        ▼
+   ROW_NUMBER()             RANK()                DENSE_RANK()
+        │                       │                        │
+        │                       │                        │
+   Unique number            Same rank for           Same rank for
+   for every row            same values            same values
+        │                       │                        │
+   No gaps                  Gaps occur              No gaps
+   after duplicates        after duplicates        after duplicates
+        │                       │                        │
+        └───────────────────────┼────────────────────────┘
+                                │
+              ┌─────────────────┴─────────────────┐
+              │                                   │
+              ▼                                   ▼
+        CUME_DIST()                         PERCENT_RANK()
+              │                                   │
+              ▼                                   ▼
+     Cumulative distribution          Relative percentile
+     of current row                   ranking of row
+              │                                   │
+              └─────────────────┬─────────────────┘
+                                │
+                                ▼
+                           NTILE(n)
+               NTILE(4) OVER (
+                ORDER BY Sales DESC
+                           )
+                                │
+                                ▼
+                   Divides rows into n groups
+                   of approximately equal size
+
+ROW_NUMBER()
+→ Unique number
+→ No ties
+→ Deduplication
+
+RANK()
+→ Same rank for ties
+→ Gaps after ties
+
+DENSE_RANK()
+→ Same rank for ties
+→ No gaps
+
+CUME_DIST()
+→ Cumulative distribution
+→ 0 to 1
+→ Proportion of rows at/below current value
+
+PERCENT_RANK()
+→ Relative rank
+→ 0 to 1
+→ (rank - 1)/(rows - 1)
+
+NTILE(n)
+→ Divide rows into n groups
+→ Approximately equal groups
+
