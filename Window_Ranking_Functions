@@ -99,3 +99,29 @@ select orderid,productid,sales, row_number()over(order by sales)as sales_rank,ra
 select orderid,productid,sales, row_number()over(order by sales)as sales_rank,rank() over(order by sales)as sales_rankusing_rank, dense_rank() over(order by sales)as sales_rankusing_Dense_rank from sales.orders
 
 
+Usecases
+
+1 find the top highest sales from each product
+
+select * from (select orderid,productid,sales, row_number() over( partition by productid order by sales)as sales_rank from sales.orders)t where sales_rank =1
+ 
+ 2 find the lowest 2 customers based on their total sales
+
+ select orderid,customerid, sales from sales.orders
+
+ select * from (select customerid,sum(sales) Total_sales, row_number() over(order by sum(sales))rk  * from sales.orders group by customerid )t  where rk <= 2;
+
+ 3 assign the unique id to the rows of the orders archieve target
+
+ select * from sales.ordersArchive;
+
+ select Row_number() over( order by orderid, orderdate) from sales.ordersarchive
+
+ 4 identify duplicate rows in the table 'orders archive and return a clean result without any duplicates
+
+ select * from sales.ordersarchive;
+
+ select * from (select Row_number() over(partition by orderid order by creationtime desc)rn, * from sales.ordersArchive)t where rn  > 1;
+
+
+
