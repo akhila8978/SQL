@@ -3,10 +3,12 @@
 ---Ranking Functions---
 
 ---integrated ranking ----- DIscrete values
- Row_number()
- Rank()over(partition by productid order by sales)
+ Row_number() ---unique ranking,does not handle ties, no gaps in ranking
+
+ Rank()over(partition by productid order by sales) shared rank, handles ties, gaps in ranking
     empty    optional               must
- dense_rank()
+ 
+dense_rank() --- shared rank, handles ties, no gaps in ranking.
  Ntile()
       should have number 
 
