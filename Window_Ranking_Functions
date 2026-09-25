@@ -81,3 +81,19 @@ NTILE(n)
 → Divide rows into n groups
 → Approximately equal groups
 
+
+Row_number():
+
+--ranking orders based on therir sales from highest to lowest
+
+select orderid,productid,sales, row_number() over(order by sales)as sales_rank from sales.orders
+
+---rank()---
+
+select orderid,productid,sales, row_number()over(order by sales)as sales_rank,rank() over(order by sales)as sales_rankusing_rank from sales.orders
+
+
+---dense_rank()---
+select orderid,productid,sales, row_number()over(order by sales)as sales_rank,rank() over(order by sales)as sales_rankusing_rank, dense_rank() over(order by sales)as sales_rankusing_Dense_rank from sales.orders
+
+
