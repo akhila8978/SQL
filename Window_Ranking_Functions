@@ -124,4 +124,36 @@ select * from (select orderid,productid,sales, row_number() over( partition by p
  select * from (select Row_number() over(partition by orderid order by creationtime desc)rn, * from sales.ordersArchive)t where rn  > 1;
 
 
+cume_dist() : cumulative distribution of data points within a window
+inclusive the current row is included
+
+cum_dist() over(order by sales desc)
+ 
+ cum_disc = postion of nr/number of rows
+          =  1/ 5
+          if ties the last occurence value position will be considered
+
+---window percent rank()--exclusive the current row is excluded
+
+caluculates the relative position of each row
+  percent_rank() over(partition by sales desc)
+
+    percent_rank = position of nr-1/no of rows -1
+
+tie rule : the position of the first occurence of same value
+
+usecase: find the products that fall within the highest 40 5 of the price
+
+select* from(
+select product, price,CumE_Dist() over(order by price desc) distRank from sales.products) t where distrank <= 0.4
+
+
+
+
+
+
+
+
+
+
 
