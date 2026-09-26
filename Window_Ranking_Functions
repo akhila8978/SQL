@@ -148,6 +148,37 @@ select* from(
 select product, price,CumE_Dist() over(order by price desc) distRank from sales.products) t where distrank <= 0.4
 
 
+NTile: divides the rows into a specific number of approximately equal groups(buckets)
+
+ntile(bucket size) over(order by sales desc)
+
+    bucket size = number of rows/ number of buckets
+select orderid,sales,ntile(1) over(order by sales desc) twobucket,
+ntile(2) over(order by sales desc) onebucket from sales.orders
+
+
+usecase of ntile:
+
+1 data segmentation : dividing data into distinct subsets based on certain criteria
+
+segment all orders into 3 categories : high , medium and low sales
+
+
+select *, case when buckets =1 then 'high'
+                 when buckets =2 then 'medium'
+                 when buckets =3 then 'low'
+        end salessegmentations
+        from (select orderid, sales,ntile(3) over(order by sales desc) Buckets from sales.orders)t
+
+
+        2 ETL :
+
+        in order to export the data , divide the orders into 2 groups
+
+        select ntile(2) over(order by sales)Buckets,* from sales.orders
+
+
+
 
 
 
