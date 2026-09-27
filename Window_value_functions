@@ -82,3 +82,31 @@ datediff(day, orderdate, lead(orderdate)over(partition by customerid order by or
 )t 
 group by customerid
 
+
+-- in order to analyze customer loyalty --
+-- rank customers  based on the average days between their orders --
+
+select customerid,avg(daysuntilnextorder)avgdays,rank() over(order by coalesce(avg(daysuntilnextorder),99999))rankavg from ( select orderid,customerid,orderdate currentorder,lead(orderdate) over(partition by customerid  order by orderdate)nextorder,
+
+datediff(day,orderdate,lead(orderdate) over(partition by customerid order by orderdate)) daysuntilnextorder from sales.orders)t group by customerid
+
+---find the average shipping duration in days for each month--
+
+select month(orderdate)as orderdate,avg(datediff(day,orderdate,shipdate))Avgship  from sales.orders group by month(orderDate)
+
+---find the number of days between each order and the previous order--
+
+select orderid,orderdate currentorderdate, lag(orderdate)over(order by orderdate)previousorderdate,datediff(day,lag(orderdate) over(orderby orderdate),orderdate)nrofdays  from sales.orders
+
+
+
+--windows first and last---
+first_value(sales) over(order by month)
+
+last_value(sales) over(order by month rows between current row and unbounded following)
+
+Range between unbounded precedings and current row
+
+find the lowest and highest sales for each product
+
+select orderid, productid,sales, first_value(sales) over(partition by productid order by sales) lowestsales, last_value(sales) over(partition by productid order by sales rows between current row and unbounded following) highestsales,first_value(sales) over(partition by productid order by sales desc)highest2 ,min(sales) over(partition by productid)lowestsales , sales - first_value(sales) over(partition by productid order by sales) sales_diff from sales.orders
