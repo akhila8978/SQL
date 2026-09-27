@@ -51,3 +51,26 @@
                          AND
                          UNBOUNDED FOLLOWING
 
+
+----window value functions-----
+--lead():access next row within a window
+
+lead(sales, 2  ,  10) over(partition by product id order by orderdate)
+     exp  , offset, default-null
+
+
+-- lag():access value from previous row
+    
+    lag(sales, 2  ,  10) over(partition by product id order by orderdate)
+
+usecases:
+
+1 analyze the month -over-month (MOM) performance by finding the percentage chage in sales betweeen the current and previous month
+   time series analysis (year over year) (month -over -month)
+
+select *, currentmonth - prev as Mom_change, round(cast(currentmonth- prev)as float)/prev*100,1) MOM_perc from (select month(orderdate) ordermonth ,sum(sales) currentmonth,Lag( sum(sales)) over(order by month(orderdate)) prev from sales.orders group by month(orderdate))t 
+
+
+
+
+
