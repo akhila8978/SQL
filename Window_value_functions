@@ -72,5 +72,13 @@ select *, currentmonth - prev as Mom_change, round(cast(currentmonth- prev)as fl
 
 
 
+rank customers based on the average days between their orders
 
+selct  customerid,avg(DaysUntilNextorder)AvgDays
+from 
+(select orderid, customerid,orderdate currentorder,
+lead(orderdate) over(partition by customerid order by orderdate) nextorder , 
+datediff(day, orderdate, lead(orderdate)over(partition by customerid order by orderdate)) DaysUntilNextorder from sales.orders
+)t 
+group by customerid
 
