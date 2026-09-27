@@ -1,1 +1,53 @@
+| Function        | Meaning       | Expression     | Partition | Order        | Frame           |
+| --------------- | ------------- | -------------- | --------- | ------------ | --------------- |
+| `LEAD()`        | Following row | All data types | Optional  | **Required** | **Not allowed** |LEAD(expression, offset, default)
+| `LAG()`         | Previous row  | All data types | Optional  | **Required** | **Not allowed** | LAG(expression, offset, default)
+| `FIRST_VALUE()` | First value   | All data types | Optional  | **Required** | Optional        | FIRST_VALUE(expression)
+| `LAST_VALUE()`  | Last value    | All data types | Optional  | **Required** | Should be used  | LAST_VALUE(expression)
+
+                  
+
+                      VALUE FUNCTIONS
+                    (Analytic Functions)
+                            │
+        ┌───────────────────┼────────────────────┐
+        │                   │                    │
+      LEAD                 LAG             FIRST_VALUE
+        │                   │                    │
+    Next Row           Previous Row         First Value
+    Forward ⏩          Backward ⏪           First Row
+        │                   │                    │
+        └───────────────┬───┴────────────────────┘
+                        │
+                   LAST_VALUE
+                        │
+                    Last Value
+                        │
+                ⚠ Frame Important
+                        │
+        ────────────────┼────────────────
+                        │
+                       OVER
+                        │
+        ┌───────────────┼────────────────┐
+        │               │                │
+   EXPRESSION      PARTITION BY       ORDER BY
+        │               │                │
+   All Data Types     Optional         REQUIRED
+                        │                │
+                   Groups rows       Row sequence
+                        │
+                        │
+                      FRAME
+                        │
+             ┌──────────┼───────────┐
+             │          │           │
+          LEAD/LAG   FIRST_VALUE LAST_VALUE
+          Not allowed Optional    Should be used
+                                      │
+                                      ↓
+                         ROWS BETWEEN
+                         UNBOUNDED PRECEDING
+                         AND
+                         UNBOUNDED FOLLOWING
 
