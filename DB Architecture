@@ -1,0 +1,38 @@
+Client – Sends SQL queries to the database.
+
+Database Engine – Processes queries and retrieves the required data.
+
+Cache – Stores frequently accessed data in memory for faster retrieval.
+
+Disk – Stores database information persistently.
+
+Temp – Stores temporary tables and intermediate results.
+
+Catalog – Stores metadata, such as table definitions and column information.
+
+User Data – Contains actual database tables and records.
+
+CLIENT
+   |
+   | 1. Sends SQL Query
+   v
+DATABASE ENGINE
+   |
+   | 2. Checks Cache First
+   v
+CACHE (IN-MEMORY)
+   |
+   +---- Data Found ----> Return Results to Client
+   |
+   +---- Data Not Found
+                |
+                v
+          DISK STORAGE
+                |
+                | 3. Reads Required Data
+                v
+          DATABASE ENGINE
+                |
+                v
+             CLIENT
+
