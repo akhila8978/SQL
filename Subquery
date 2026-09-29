@@ -1632,3 +1632,46 @@ select * from sales.orders
 select orderid, orderdate from sales.orders
 
 
+---from subquery---
+
+>> used as temporary table for the main query
+
+select col1 , col2 from (select col from table where condition)as alias
+
+1 find the producrts that have a price higher than the average price of all products
+
+select * from (select price,productid, avg(price) over() as Avgprice from sales.products)t  where price > Avgprice   
+
+2 rank all customers based on their total amount of sales---
+
+select *, rank() over (order by totalsales desc) customerRank (select * from (select customerid,sales from sales.orders group by customerid)t 
+
+
+...select in subquery--- 1 only scalar  subqueries are allowed to be used--
+
+used to aggregate data side by side with the main querys data allowing direct comparision
+
+select col1 ,col2 (select  from table1 where condn) as alias from table 1;
+
+---show the product ids, productnames, proces and the total number of orders---
+
+select productid,product,price ,( select count(*) from sales.orders )as totalorders 
+from sales.products ;
+
+---subquery in joins---
+
+used to prepare the data (filtering or aggregation before joining it with other tables)
+
+---show all the customer detials and fins the total orders iof each customer---
+
+select 
+
+
+
+
+
+
+
+
+
+
