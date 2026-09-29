@@ -1616,3 +1616,19 @@ NOT EXISTS
 ANY
 ALL
 ```
+
+
+Result types:
+1 scalar subquery --return single value
+
+select avg(sales) from sales.orders
+
+2 row sub query --- return multivalue'
+
+select * from sales.orders
+
+3 table sub query --- return multiple columns rows
+
+select orderid, orderdate from sales.orders
+
+
