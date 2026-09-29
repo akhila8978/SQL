@@ -1,1 +1,1618 @@
 
+# SQL SUBQUERIES
+
+## 1. What is a Subquery?
+
+A **subquery** is a query written inside another SQL query.
+
+The inner query is called the **subquery** or **inner query**, while the outer query is called the **main query** or **outer query**.
+
+### Basic Structure
+
+```sql
+SELECT column1, column2
+FROM table
+WHERE column1 IN
+(
+    SELECT column1
+    FROM another_table
+);
+```
+
+### Example
+
+Find employees whose salary is greater than the average salary.
+
+```sql
+SELECT employee_id, employee_name, salary
+FROM employees
+WHERE salary >
+(
+    SELECT AVG(salary)
+    FROM employees
+);
+```
+
+### Execution Concept
+
+```text
+             MAIN QUERY
+                 │
+                 ▼
+          ┌─────────────┐
+          │  SUBQUERY   │
+          └─────────────┘
+                 │
+                 ▼
+          Returns result
+                 │
+                 ▼
+          Main query uses
+          that result
+```
+
+---
+
+# 2. Classification of Subqueries
+
+Subqueries can be classified in different ways.
+
+```text
+                         SUBQUERY
+                            │
+            ┌───────────────┼────────────────┐
+            │               │                │
+       Dependency        Result Type       Location
+            │               │                │
+      ┌─────┴─────┐    ┌────┼────┬────┐   ┌──┼───────────────┐
+      │           │    │    │    │    │   │  │   │   │   │
+Non-Correlated Correlated Scalar Row Table SELECT FROM JOIN WHERE
+```
+
+---
+
+# 3. Based on Dependency
+
+## 3.1 Non-Correlated Subquery
+
+A **non-correlated subquery** is independent of the outer query.
+
+The subquery can execute by itself without using any column from the outer query.
+
+### Example
+
+Find employees earning more than the average salary.
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary >
+(
+    SELECT AVG(salary)
+    FROM employees
+);
+```
+
+The subquery:
+
+```sql
+SELECT AVG(salary)
+FROM employees;
+```
+
+does not depend on the outer query.
+
+### Execution
+
+```text
+Step 1:
+Calculate average salary
+
+        ↓
+
+Step 2:
+Compare every employee's salary
+with the calculated average
+
+        ↓
+
+Step 3:
+Return matching employees
+```
+
+### Key Point
+
+```text
+Non-correlated subquery
+        ↓
+Independent
+        ↓
+Can execute separately
+        ↓
+Usually executes before outer query
+```
+
+---
+
+# 3.2 Correlated Subquery
+
+A **correlated subquery** depends on the outer query.
+
+The inner query refers to a column from the outer query.
+
+Therefore, the subquery cannot be completely independent of the outer query.
+
+### Example
+
+Find employees whose salary is greater than the average salary of their own department.
+
+```sql
+SELECT e.employee_name,
+       e.department_id,
+       e.salary
+FROM employees e
+WHERE e.salary >
+(
+    SELECT AVG(e2.salary)
+    FROM employees e2
+    WHERE e2.department_id = e.department_id
+);
+```
+
+Here:
+
+```sql
+e.department_id
+```
+
+comes from the **outer query**.
+
+Therefore, the subquery is correlated.
+
+### Execution Concept
+
+```text
+Outer employee
+      │
+      ▼
+Find employee's department
+      │
+      ▼
+Calculate average salary
+for that department
+      │
+      ▼
+Compare employee salary
+with department average
+      │
+      ▼
+Next employee
+```
+
+### Important
+
+A correlated subquery is logically evaluated with reference to each row of the outer query, although the database optimizer may transform the execution plan.
+
+---
+
+# 4. Non-Correlated vs Correlated
+
+| Feature                   | Non-Correlated           | Correlated                           |
+| ------------------------- | ------------------------ | ------------------------------------ |
+| Dependency                | Independent              | Depends on outer query               |
+| Outer query reference     | No                       | Yes                                  |
+| Can execute independently | Yes                      | No                                   |
+| Outer-column reference    | No                       | Yes                                  |
+| Typical use               | Overall comparison       | Row-by-row/group-specific comparison |
+| Example                   | Salary > company average | Salary > department average          |
+
+---
+
+# 5. Classification Based on Result Type
+
+Subqueries can also be classified according to the result they return.
+
+```text
+             RESULT TYPE
+                  │
+       ┌──────────┼──────────┐
+       │          │          │
+     Scalar      Row       Table
+       │          │          │
+   One value   Multiple    Multiple
+               values      rows + columns
+```
+
+---
+
+# 6. Scalar Subquery
+
+A **scalar subquery** returns exactly **one value**.
+
+That means:
+
+```text
+1 row
+1 column
+```
+
+### Example
+
+Find employees earning more than the average salary.
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary >
+(
+    SELECT AVG(salary)
+    FROM employees
+);
+```
+
+The subquery:
+
+```sql
+SELECT AVG(salary)
+FROM employees;
+```
+
+returns one value.
+
+Example:
+
+```text
+65000
+```
+
+Therefore:
+
+```sql
+salary > 65000
+```
+
+### Common Operators
+
+Scalar subqueries can commonly be used with:
+
+```text
+>
+<
+>=
+<=
+=
+<>
+!=
+```
+
+### Example
+
+```sql
+SELECT *
+FROM employees
+WHERE salary =
+(
+    SELECT MAX(salary)
+    FROM employees
+);
+```
+
+---
+
+# 7. Row / Multi-Row Subquery
+
+A multi-row subquery returns **multiple rows**.
+
+It can return:
+
+```text
+Multiple rows
++
+Usually one column
+```
+
+Example:
+
+Find employees working in departments located in New York.
+
+```sql
+SELECT employee_name, department_id
+FROM employees
+WHERE department_id IN
+(
+    SELECT department_id
+    FROM departments
+    WHERE location = 'New York'
+);
+```
+
+The subquery may return:
+
+```text
+10
+20
+30
+```
+
+Therefore:
+
+```sql
+department_id IN (10, 20, 30)
+```
+
+---
+
+# 8. Table Subquery
+
+A table subquery returns a **result set containing multiple rows and multiple columns**.
+
+It can be used as a derived table in the `FROM` clause.
+
+### Example
+
+Calculate the average salary by department and then query that result.
+
+```sql
+SELECT department_id,
+       avg_salary
+FROM
+(
+    SELECT department_id,
+           AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department_id
+) AS dept_salary;
+```
+
+The subquery produces a temporary result like:
+
+```text
+department_id    avg_salary
+-------------    ----------
+10               65000
+20               72000
+30               58000
+```
+
+The outer query treats this result as a table.
+
+### Important Terminology
+
+A subquery in the `FROM` clause is commonly called a:
+
+```text
+Derived Table
+```
+
+---
+
+# 9. Scalar vs Multi-Row vs Table Subquery
+
+| Type            |     Rows |   Columns | Common Usage                 |
+| --------------- | -------: | --------: | ---------------------------- |
+| Scalar          |        1 |         1 | `=`, `>`, `<`, etc.          |
+| Multi-row       | Multiple | Usually 1 | `IN`, `ANY`, `ALL`, `EXISTS` |
+| Table / Derived | Multiple |  Multiple | `FROM`                       |
+
+---
+
+# 10. Classification Based on Location
+
+A subquery can appear in different parts of a SQL statement.
+
+```text
+                 SUBQUERY LOCATION
+                        │
+        ┌───────────────┼────────────────┐
+        │               │                │
+      SELECT           FROM             WHERE
+        │               │                │
+     Scalar         Derived Table     Filtering
+                                        │
+                                      EXISTS
+                                      IN
+                                      ANY
+                                      ALL
+```
+
+Subqueries can also appear in other SQL clauses depending on the database system and SQL statement.
+
+---
+
+# 11. Subquery in SELECT
+
+A scalar subquery can be placed in the `SELECT` list.
+
+### Example
+
+Display every employee along with the company's average salary.
+
+```sql
+SELECT employee_name,
+       salary,
+       (
+           SELECT AVG(salary)
+           FROM employees
+       ) AS company_avg_salary
+FROM employees;
+```
+
+Result:
+
+```text
+employee_name    salary    company_avg_salary
+--------------   -------   ------------------
+John             50000     65000
+David            70000     65000
+Sarah            75000     65000
+```
+
+The same average value is displayed for each row.
+
+### Rule
+
+A subquery used in the `SELECT` list generally needs to return:
+
+```text
+Exactly one value per outer row
+```
+
+---
+
+# 12. Subquery in FROM
+
+A subquery in the `FROM` clause acts as a temporary result table.
+
+### Example
+
+```sql
+SELECT department_id,
+       avg_salary
+FROM
+(
+    SELECT department_id,
+           AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department_id
+) AS d;
+```
+
+The inner query creates:
+
+```text
+Department Summary
+        │
+        ▼
+┌─────────────────────────┐
+│ department_id │ avg_sal │
+├─────────────────────────┤
+│ 10            │ 65000   │
+│ 20            │ 72000   │
+│ 30            │ 58000   │
+└─────────────────────────┘
+```
+
+The outer query reads this result like a table.
+
+### Important
+
+Most SQL databases require an alias:
+
+```sql
+) AS d
+```
+
+---
+
+# 13. Subquery in WHERE
+
+This is one of the most common locations for subqueries.
+
+Example:
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary >
+(
+    SELECT AVG(salary)
+    FROM employees
+);
+```
+
+The subquery generates a value used to filter rows.
+
+---
+
+# 14. Subquery in JOIN
+
+A subquery can also be used to create a derived result that is joined with another table.
+
+### Example
+
+```sql
+SELECT e.employee_name,
+       d.department_id,
+       d.avg_salary
+FROM employees e
+JOIN
+(
+    SELECT department_id,
+           AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department_id
+) d
+ON e.department_id = d.department_id;
+```
+
+Here:
+
+```text
+Subquery
+   ↓
+Department average
+   ↓
+JOIN
+   ↓
+Employees
+```
+
+---
+
+# 15. Comparison Operators with Subqueries
+
+Scalar subqueries can be used with comparison operators.
+
+Common operators:
+
+```text
+=
+<>
+!=
+>
+<
+>=
+<=
+```
+
+### Example: `>`
+
+Find employees earning above average.
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary >
+(
+    SELECT AVG(salary)
+    FROM employees
+);
+```
+
+### Example: `=`
+
+Find the employee(s) with the highest salary.
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary =
+(
+    SELECT MAX(salary)
+    FROM employees
+);
+```
+
+### Example: `<`
+
+Find employees earning less than the average salary.
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary <
+(
+    SELECT AVG(salary)
+    FROM employees
+);
+```
+
+---
+
+# 16. IN with Subquery
+
+`IN` checks whether a value exists in a set of values returned by a subquery.
+
+### Syntax
+
+```sql
+SELECT columns
+FROM table
+WHERE column IN
+(
+    SELECT column
+    FROM table
+    WHERE condition
+);
+```
+
+### Example
+
+Find employees working in departments located in New York.
+
+```sql
+SELECT employee_name, department_id
+FROM employees
+WHERE department_id IN
+(
+    SELECT department_id
+    FROM departments
+    WHERE location = 'New York'
+);
+```
+
+### Concept
+
+```text
+Subquery returns:
+
+10
+20
+30
+
+        ↓
+
+IN (10,20,30)
+
+        ↓
+
+Employee department
+must match one of these values
+```
+
+---
+
+# 17. NOT IN with Subquery
+
+`NOT IN` returns rows whose value is not present in the subquery result.
+
+### Example
+
+```sql
+SELECT employee_name, department_id
+FROM employees
+WHERE department_id NOT IN
+(
+    SELECT department_id
+    FROM departments
+    WHERE location = 'New York'
+);
+```
+
+### Important NULL Warning
+
+`NOT IN` can produce unexpected results when the subquery returns `NULL`.
+
+Example:
+
+```text
+Subquery result:
+
+10
+20
+NULL
+```
+
+Because of SQL's three-valued logic, comparisons involving `NULL` can result in `UNKNOWN`.
+
+Therefore, be careful when using:
+
+```sql
+NOT IN
+```
+
+A common alternative is `NOT EXISTS`.
+
+---
+
+# 18. EXISTS with Subquery
+
+`EXISTS` checks whether the subquery returns **at least one row**.
+
+It does not care about the actual value returned.
+
+### Example
+
+Find employees who belong to a department that exists in the departments table.
+
+```sql
+SELECT e.employee_name
+FROM employees e
+WHERE EXISTS
+(
+    SELECT 1
+    FROM departments d
+    WHERE d.department_id = e.department_id
+);
+```
+
+### Concept
+
+```text
+Outer employee
+      │
+      ▼
+Does matching department exist?
+      │
+   ┌──┴──┐
+  YES    NO
+   │      │
+ Return  Ignore
+```
+
+### Why `SELECT 1`?
+
+With `EXISTS`, the database only needs to know whether at least one matching row exists.
+
+Therefore:
+
+```sql
+SELECT 1
+```
+
+is commonly used.
+
+The actual value `1` is not important.
+
+---
+
+# 19. NOT EXISTS
+
+`NOT EXISTS` checks whether the subquery returns **zero rows**.
+
+### Example
+
+Find departments that have no employees.
+
+```sql
+SELECT d.department_id,
+       d.department_name
+FROM departments d
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM employees e
+    WHERE e.department_id = d.department_id
+);
+```
+
+### Concept
+
+```text
+Department
+    │
+    ▼
+Does employee exist?
+    │
+ ┌──┴──┐
+YES    NO
+ │      │
+Skip   Return
+```
+
+---
+
+# 20. IN vs EXISTS
+
+Both can be used to test membership/existence, but they express the logic differently.
+
+### IN
+
+```sql
+WHERE department_id IN
+(
+    SELECT department_id
+    FROM departments
+    WHERE location = 'New York'
+);
+```
+
+Meaning:
+
+```text
+Is this department_id
+present in the returned set?
+```
+
+### EXISTS
+
+```sql
+WHERE EXISTS
+(
+    SELECT 1
+    FROM departments d
+    WHERE d.department_id = e.department_id
+      AND d.location = 'New York'
+);
+```
+
+Meaning:
+
+```text
+Does at least one matching department
+exist for this employee?
+```
+
+### Important
+
+Do not memorize:
+
+```text
+EXISTS = always faster
+IN = always slower
+```
+
+That is not generally correct.
+
+Actual performance depends on:
+
+* Database engine
+* Data distribution
+* Indexes
+* Statistics
+* Query optimizer
+* Query structure
+
+Always check the execution plan for performance-sensitive queries.
+
+---
+
+# 21. ANY / SOME
+
+`ANY` compares a value against values returned by a subquery.
+
+The condition is true if it is true for **at least one** value.
+
+`SOME` is a synonym for `ANY` in SQL standards/database systems that support it.
+
+### Example
+
+Find employees whose salary is greater than at least one salary in department 10.
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary > ANY
+(
+    SELECT salary
+    FROM employees
+    WHERE department_id = 10
+);
+```
+
+Suppose the subquery returns:
+
+```text
+40000
+50000
+60000
+```
+
+Then:
+
+```sql
+salary > ANY (40000, 50000, 60000)
+```
+
+means the salary must be greater than **at least one** of these values.
+
+In this example, that is equivalent to being greater than the minimum value, assuming ordinary non-NULL comparisons.
+
+---
+
+# 22. ALL
+
+`ALL` compares a value against **every value** returned by the subquery.
+
+### Example
+
+Find employees whose salary is greater than every salary in department 10.
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary > ALL
+(
+    SELECT salary
+    FROM employees
+    WHERE department_id = 10
+);
+```
+
+If the subquery returns:
+
+```text
+40000
+50000
+60000
+```
+
+then:
+
+```text
+salary > ALL (40000, 50000, 60000)
+```
+
+means:
+
+```text
+salary > 40000
+AND
+salary > 50000
+AND
+salary > 60000
+```
+
+So effectively the salary must be greater than the maximum value in this example.
+
+---
+
+# 23. ANY vs ALL
+
+| Operator | Meaning                                       |
+| -------- | --------------------------------------------- |
+| `ANY`    | Condition must be true for at least one value |
+| `ALL`    | Condition must be true for every value        |
+| `SOME`   | Synonym for `ANY`                             |
+
+### Memory Trick
+
+```text
+ANY → At least ONE
+
+ALL → Every ONE
+```
+
+---
+
+# 24. Logical Operators with Subqueries
+
+Subqueries commonly work with:
+
+```text
+IN
+NOT IN
+EXISTS
+NOT EXISTS
+ANY
+ALL
+```
+
+These operators are not all the same kind of thing.
+
+### Comparison Operators
+
+```text
+=
+<>
+!=
+>
+<
+>=
+<=
+```
+
+Usually used with a scalar result.
+
+### Set / Existence Operators
+
+```text
+IN
+NOT IN
+EXISTS
+NOT EXISTS
+ANY
+ALL
+```
+
+Usually used when dealing with multiple rows or existence checks.
+
+---
+
+# 25. Subquery with Aggregate Functions
+
+Subqueries are frequently combined with aggregate functions.
+
+Common aggregate functions:
+
+```text
+COUNT()
+SUM()
+AVG()
+MIN()
+MAX()
+```
+
+### Example: Above Average
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary >
+(
+    SELECT AVG(salary)
+    FROM employees
+);
+```
+
+### Example: Maximum Salary
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary =
+(
+    SELECT MAX(salary)
+    FROM employees
+);
+```
+
+### Example: Minimum Salary
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary =
+(
+    SELECT MIN(salary)
+    FROM employees
+);
+```
+
+---
+
+# 26. Nested Subqueries
+
+A subquery can contain another subquery.
+
+This is called a **nested subquery**.
+
+### Example
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary >
+(
+    SELECT AVG(salary)
+    FROM employees
+    WHERE department_id IN
+    (
+        SELECT department_id
+        FROM departments
+        WHERE location = 'New York'
+    )
+);
+```
+
+Concept:
+
+```text
+Outer Query
+    │
+    ▼
+Average Salary
+    │
+    ▼
+Departments in New York
+    │
+    ▼
+Department IDs
+```
+
+Nested subqueries should be used carefully because excessive nesting can make SQL difficult to read and maintain.
+
+A CTE can sometimes make the logic clearer.
+
+---
+
+# 27. Subquery vs JOIN
+
+Many subquery problems can also be solved using joins.
+
+### Subquery
+
+```sql
+SELECT e.employee_name
+FROM employees e
+WHERE e.department_id IN
+(
+    SELECT d.department_id
+    FROM departments d
+    WHERE d.location = 'New York'
+);
+```
+
+### JOIN
+
+```sql
+SELECT e.employee_name
+FROM employees e
+JOIN departments d
+    ON e.department_id = d.department_id
+WHERE d.location = 'New York';
+```
+
+Both can express similar logic.
+
+### Which should you use?
+
+Consider:
+
+```text
+Readability
++
+Correctness
++
+Maintainability
++
+Execution plan
++
+Database optimizer
+```
+
+Do not assume that a join is always faster or that a subquery is always slower.
+
+---
+
+# 28. Subquery vs CTE
+
+A CTE can sometimes make a complex subquery easier to understand.
+
+### Subquery
+
+```sql
+SELECT *
+FROM
+(
+    SELECT department_id,
+           AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department_id
+) d
+WHERE avg_salary > 60000;
+```
+
+### CTE
+
+```sql
+WITH department_salary AS
+(
+    SELECT department_id,
+           AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department_id
+)
+SELECT *
+FROM department_salary
+WHERE avg_salary > 60000;
+```
+
+The CTE version can be easier to read when the query contains multiple steps.
+
+---
+
+# 29. Important Rules for Subqueries
+
+## Rule 1: Scalar subquery must return one value
+
+This is valid:
+
+```sql
+WHERE salary >
+(
+    SELECT AVG(salary)
+    FROM employees
+);
+```
+
+But this can cause an error if multiple rows are returned:
+
+```sql
+WHERE salary =
+(
+    SELECT salary
+    FROM employees
+);
+```
+
+Because `=` expects a single value.
+
+Use `IN` when multiple values are expected:
+
+```sql
+WHERE salary IN
+(
+    SELECT salary
+    FROM employees
+);
+```
+
+---
+
+## Rule 2: Column count must match for row comparisons
+
+When using row-value comparisons, the number and order of columns must be compatible.
+
+Example:
+
+```sql
+WHERE (department_id, job_id) IN
+(
+    SELECT department_id, job_id
+    FROM employee_history
+);
+```
+
+The outer expression has two columns, so the subquery must return two corresponding columns.
+
+---
+
+## Rule 3: Alias correlated subqueries clearly
+
+Prefer:
+
+```sql
+SELECT e.employee_name
+FROM employees e
+WHERE e.salary >
+(
+    SELECT AVG(e2.salary)
+    FROM employees e2
+    WHERE e2.department_id = e.department_id
+);
+```
+
+rather than using ambiguous column names.
+
+---
+
+# 30. NULL and Subqueries
+
+`NULL` requires special attention.
+
+Consider:
+
+```sql
+WHERE department_id NOT IN
+(
+    SELECT department_id
+    FROM departments
+);
+```
+
+If the subquery contains:
+
+```text
+NULL
+```
+
+the result can be affected by SQL's three-valued logic.
+
+For anti-matching logic, `NOT EXISTS` is often a safer formulation.
+
+Example:
+
+```sql
+SELECT e.employee_name
+FROM employees e
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM departments d
+    WHERE d.department_id = e.department_id
+);
+```
+
+---
+
+# 31. Real-World Data Engineering Uses
+
+Subqueries are useful in data engineering for:
+
+### 1. Data Validation
+
+Find records with invalid references.
+
+```sql
+SELECT *
+FROM orders o
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM customers c
+    WHERE c.customer_id = o.customer_id
+);
+```
+
+### 2. Duplicate Detection
+
+```sql
+SELECT *
+FROM orders
+WHERE customer_id IN
+(
+    SELECT customer_id
+    FROM orders
+    GROUP BY customer_id
+    HAVING COUNT(*) > 1
+);
+```
+
+### 3. Incremental Processing
+
+Find records newer than the latest processed timestamp.
+
+```sql
+SELECT *
+FROM source_orders
+WHERE updated_at >
+(
+    SELECT MAX(updated_at)
+    FROM target_orders
+);
+```
+
+### 4. Data Quality Checks
+
+Find orphan records.
+
+```sql
+SELECT o.order_id
+FROM orders o
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM customers c
+    WHERE c.customer_id = o.customer_id
+);
+```
+
+### 5. Business Analytics
+
+Find products whose sales are above average.
+
+```sql
+SELECT product_id, sales
+FROM product_sales
+WHERE sales >
+(
+    SELECT AVG(sales)
+    FROM product_sales
+);
+```
+
+---
+
+# 32. Interview-Focused Examples
+
+## Question 1: Find employees earning more than the average salary.
+
+```sql
+SELECT *
+FROM employees
+WHERE salary >
+(
+    SELECT AVG(salary)
+    FROM employees
+);
+```
+
+Type:
+
+```text
+Non-correlated
+Scalar
+WHERE subquery
+```
+
+---
+
+## Question 2: Find employees earning more than their department average.
+
+```sql
+SELECT e.employee_id,
+       e.employee_name,
+       e.salary
+FROM employees e
+WHERE e.salary >
+(
+    SELECT AVG(e2.salary)
+    FROM employees e2
+    WHERE e2.department_id = e.department_id
+);
+```
+
+Type:
+
+```text
+Correlated
+Scalar
+WHERE subquery
+```
+
+---
+
+## Question 3: Find employees belonging to departments in New York.
+
+```sql
+SELECT *
+FROM employees
+WHERE department_id IN
+(
+    SELECT department_id
+    FROM departments
+    WHERE location = 'New York'
+);
+```
+
+Type:
+
+```text
+Non-correlated
+Multi-row
+IN
+```
+
+---
+
+## Question 4: Find departments with no employees.
+
+```sql
+SELECT d.department_id,
+       d.department_name
+FROM departments d
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM employees e
+    WHERE e.department_id = d.department_id
+);
+```
+
+Type:
+
+```text
+Correlated
+EXISTS / NOT EXISTS
+```
+
+---
+
+## Question 5: Find employees earning more than every employee in department 10.
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary > ALL
+(
+    SELECT salary
+    FROM employees
+    WHERE department_id = 10
+);
+```
+
+Type:
+
+```text
+Multi-row
+ALL
+```
+
+---
+
+# 33. Complete Subquery Mind Map
+
+```text
+                         SQL SUBQUERY
+                              │
+       ┌──────────────────────┼──────────────────────┐
+       │                      │                      │
+   DEPENDENCY             RESULT TYPE             LOCATION
+       │                      │                      │
+   ┌───┴────┐          ┌──────┼──────┐       ┌──────┼────────┐
+   │        │          │      │      │       │      │        │
+Non-     Correlated  Scalar  Multi-  Table  SELECT  FROM    WHERE
+Correlated                    Row                   │        │
+                                                    │        │
+                                                Derived    IN
+                                                Table      EXISTS
+                                                           ANY
+                                                           ALL
+                                                           │
+                                                        NOT IN
+                                                        NOT EXISTS
+
+                              │
+                              ▼
+                       OPERATORS
+                              │
+             ┌────────────────┴────────────────┐
+             │                                 │
+       Comparison                         Logical/Set
+             │                                 │
+       =  <>  !=  >                     IN
+       <  >=  <=                        NOT IN
+                                        EXISTS
+                                        NOT EXISTS
+                                        ANY
+                                        ALL
+```
+
+---
+
+# 34. Quick Revision Table
+
+| Topic             | Meaning                               | Example                  |
+| ----------------- | ------------------------------------- | ------------------------ |
+| Subquery          | Query inside another query            | `WHERE x IN (SELECT...)` |
+| Non-correlated    | Independent of outer query            | Company average          |
+| Correlated        | Depends on outer query                | Department average       |
+| Scalar            | One value                             | `AVG()`                  |
+| Multi-row         | Multiple values                       | `IN`                     |
+| Table             | Multiple rows + columns               | `FROM (SELECT...)`       |
+| `IN`              | Matches any returned value            | `id IN (...)`            |
+| `NOT IN`          | Does not match returned values        | `id NOT IN (...)`        |
+| `EXISTS`          | At least one matching row             | `EXISTS (...)`           |
+| `NOT EXISTS`      | No matching row                       | `NOT EXISTS (...)`       |
+| `ANY`             | Condition true for at least one value | `salary > ANY (...)`     |
+| `ALL`             | Condition true for every value        | `salary > ALL (...)`     |
+| `SELECT` subquery | Usually scalar value                  | `SELECT (SELECT...)`     |
+| `FROM` subquery   | Derived table                         | `FROM (SELECT...) d`     |
+| `WHERE` subquery  | Filters rows                          | `WHERE salary > (...)`   |
+| `JOIN` subquery   | Derived result used for joining       | `JOIN (SELECT...) d`     |
+
+---
+
+# 35. Interview Memory Trick
+
+Remember subqueries using **3 questions**:
+
+### Q1 — Does it depend on the outer query?
+
+```text
+NO  → Non-correlated
+YES → Correlated
+```
+
+### Q2 — What does it return?
+
+```text
+1 value       → Scalar
+Multiple rows → Multi-row
+Rows + columns → Table / Derived Table
+```
+
+### Q3 — Where is it written?
+
+```text
+SELECT → Return/calculation
+FROM   → Derived table
+WHERE  → Filtering
+JOIN   → Join with derived result
+```
+
+Then remember the major operators:
+
+```text
+Comparison:
+=  <>  !=  >  <  >=  <=
+
+Set / existence:
+IN
+NOT IN
+EXISTS
+NOT EXISTS
+ANY
+ALL
+```
