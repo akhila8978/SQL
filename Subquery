@@ -1688,10 +1688,26 @@ select col1 , col2 from table 1 where column = (select col from table2 where con
   select productid, price from sales.products where price > (select avg(price) from sales.products)
 
 2 logical operator: 
+>> in operator : to check whether value matches any value from list we will get true
 
+select col1 , col2 from table where col in (select col from tab 2 where condn);
 
+---show the details of orders made by custo,mers in germany---
 
+select * from sales.orders where customerid in (select customerid from sales.customers where country = 'Germany')
 
+---cutsomer or not from germany---
+select * from sales.orders where customerid in (select customerid from sales.customers where country != 'Germany')
+
+select * from sales.orders where customerid not in (select customerid from sales.customers where country = 'Germany')
+
+---Any operator : checks if a value matches any value within list used to check if value is true for atleast one of the values in a list
+
+select col1, col2 from table1 where col < any or all (select col from tabl1 where condin)
+
+>> find female employees whose salaries are greater than salries of any male employees
+
+select employeeid, firstname,salary from sales.employees where gender = 'F' and salary > any (select salary from sales.employees  where gender = 'M')
 
 
 
