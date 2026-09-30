@@ -1710,6 +1710,12 @@ select col1, col2 from table1 where col < any or all (select col from tabl1 wher
 select employeeid, firstname,salary from sales.employees where gender = 'F' and salary > any (select salary from sales.employees  where gender = 'M')
 
 
+correlated subquery:a subquery that relays on values from main query 
+
+---show all the customers and find the total orders of each customer--
+
+select *,(select  count(*) from sales.orders o where o.customerid = c.customerid ) totalsales from sales.customers c
+
 
 
 
