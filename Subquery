@@ -1664,7 +1664,32 @@ used to prepare the data (filtering or aggregation before joining it with other 
 
 ---show all the customer detials and fins the total orders iof each customer---
 
-select 
+show all the customers details and find the total orders of each customer
+
+select  c.*, o.Totalorders  from sales.customers c left join (select customerid, count(*) Totalorders from sales.orders group by customerid) o on c.customerid =o.customerid
+
+
+---where---
+1 comparison operator:  used to filter data by comparing values
+
+| Operator    | Meaning                  | Example                                          |
+| ----------- | ------------------------ | ------------------------------------------------ |
+| `=`         | Equal to                 | `WHERE Sales = (SELECT AVG(Sales) FROM Orders)`  |
+| `!=` / `<>` | Not equal to             | `WHERE Sales != (SELECT AVG(Sales) FROM Orders)` |
+| `>`         | Greater than             | `WHERE Sales > (SELECT AVG(Sales) FROM Orders)`  |
+| `<`         | Less than                | `WHERE Sales < (SELECT AVG(Sales) FROM Orders)`  |
+| `>=`        | Greater than or equal to | `WHERE Sales >= (SELECT AVG(Sales) FROM Orders)` |
+| `<=`        | Less than or equal to    | `WHERE Sales <= (SELECT AVG(Sales) FROM Orders)` |
+
+select col1 , col2 from table 1 where column = (select col from table2 where condn)
+
+ >>> find the products that have a proice higher than the average price of all products---
+  
+  select productid, price from sales.products where price > (select avg(price) from sales.products)
+
+2 logical operator: 
+
+
 
 
 
