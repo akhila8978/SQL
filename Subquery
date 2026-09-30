@@ -1710,13 +1710,35 @@ select col1, col2 from table1 where col < any or all (select col from tabl1 wher
 select employeeid, firstname,salary from sales.employees where gender = 'F' and salary > any (select salary from sales.employees  where gender = 'M')
 
 
-correlated subquery:a subquery that relays on values from main query 
+correlated subquery: 
+a subquery that relays on values from main query 
 
 ---show all the customers and find the total orders of each customer--
 
 select *,(select  count(*) from sales.orders o where o.customerid = c.customerid ) totalsales from sales.customers c
 
+exists :check a subquery exists and return row
 
+select col1,col2 from table where exists (selct 1 from table 1 where table.id = table2.id)
+
+select * from sales.orders o where not exists (select 1 from sales.customers c where country ='Germany' and o.customerid =c.customerid)
+
+
+
+
+Basis	          Non-Correlated Subquery	                     Correlated Subquery
+1. Dependency	 Independent of the main query	              Dependent on the main query
+2. Execution	Usually executed once	                     Executed for each row of the main query
+3. Standalone   execution	Can be executed independently	  Cannot be executed independently
+4. Performance	 Generally faster	                         Can be slower due to repeated execution
+5. Complexity	 Easier to understand and write	             More complex to understand and write
+6. Outer 
+query reference 	Does not reference the outer query	    References columns from the outer query
+7. Result	    Produces a result that can be
+                  reused by the main query	                  Result may change for each row of the main query
+8. Common use	Comparisons with fixed values or 
+                  aggregate results                          	Row-by-row comparisons and dynamic filtering
+9. Example	WHERE salary > (SELECT AVG(salary) FROM employees)	 WHERE salary > (SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e1.dept_id)
 
 
 
