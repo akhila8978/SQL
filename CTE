@@ -1,1 +1,369 @@
 
+CTE — Common Table Expression
+A CTE (Common Table Expression) is a temporary named result set (virtual table) that exists only for the duration of a single SQL query.
+
+It is mainly used to make complex queries easier to read, organize, and maintain.
+
+Why use CTEs?
+Reduce redundancy — avoid repeating the same query logic.
+
+Improve readability — break a complex query into smaller parts.
+
+Improve modularity — separate different pieces of logic.
+
+Simplify complex queries — especially when multiple steps are required.
+
+Basic Syntax
+WITH cte_name AS
+(
+    SELECT ...
+    FROM ...
+    WHERE ...
+)
+SELECT ...
+FROM cte_name
+WHERE ...;
+
+Think of it as:
+
+Database
+   ↓
+ CTE
+   ↓
+Intermediate Result
+   ↓
+Main Query
+   ↓
+ Final Result
+
+Types of CTEs
+There are two main categories:
+
+Non-Recursive CTE
+
+Standalone CTE
+
+Nested/Dependent CTE
+
+Multiple CTEs
+
+Recursive CTE
+
+1. Non-Recursive CTE
+A non-recursive CTE does not refer to itself.
+
+It can be:
+
+Standalone
+
+Nested/dependent
+
+Multiple CTEs used together
+
+Standalone CTE
+A standalone CTE is independent.
+
+It does not depend on another CTE.
+
+Example
+Task: Find total sales per customer.
+
+Without CTE:
+
+SELECT
+    customerid,
+    SUM(Sales) AS totalsales
+FROM sales.orders
+GROUP BY customerid;
+
+Using a CTE:
+
+WITH cte_totalsales AS
+(
+    SELECT
+        customerid,
+        SUM(Sales) AS totalsales
+    FROM sales.orders
+    GROUP BY customerid
+)
+SELECT
+    c.customerid,
+    c.firstname,
+    c.lastname,
+    cts.totalsales
+FROM sales.customers c
+LEFT JOIN cte_totalsales cts
+    ON cts.customerid = c.customerid;
+
+How it works
+First, the CTE produces:
+
+cte_totalsales
+-------------------------
+customerid | totalsales
+-------------------------
+1          | 5000
+2          | 7500
+3          | 3200
+
+Then the main query uses that result and joins it with sales.customers.
+
+Important point
+A CTE is not a permanent table.
+
+It exists only while the query is executing.
+
+ORDER BY with CTE
+Generally, ORDER BY belongs in the final/main query when you want to control the final output order.
+
+Example:
+
+WITH cte_totalsales AS
+(
+    SELECT
+        customerid,
+        SUM(Sales) AS totalsales
+    FROM sales.orders
+    GROUP BY customerid
+)
+SELECT *
+FROM cte_totalsales
+ORDER BY totalsales DESC;
+
+Remember
+CTE → prepares the data
+Main Query → produces the final result
+ORDER BY → normally used in the final query
+
+There are database-specific exceptions where ORDER BY may be allowed inside a CTE, such as when used with TOP, LIMIT, OFFSET, or similar constructs. But an internal ORDER BY does not generally guarantee the order of the final result.
+
+Multiple CTEs
+You can define multiple CTEs using a single WITH.
+
+Separate CTE definitions using commas.
+
+Example Task
+Find:
+
+Total sales per customer
+
+Last order date for each customer
+
+WITH cte_totalsales AS
+(
+    SELECT
+        customerid,
+        SUM(Sales) AS totalsales
+    FROM sales.orders
+    GROUP BY customerid
+),
+cte_lastorders AS
+(
+    SELECT
+        customerid,
+        MAX(orderdate) AS last_order
+    FROM sales.orders
+    GROUP BY customerid
+)
+SELECT
+    c.customerid,
+    c.firstname,
+    c.lastname,
+    cts.totalsales,
+    clo.last_order
+FROM sales.customers c
+LEFT JOIN cte_totalsales cts
+    ON cts.customerid = c.customerid
+LEFT JOIN cte_lastorders clo
+    ON clo.customerid = c.customerid;
+
+Structure
+WITH
+    CTE 1
+      ↓
+    CTE 2
+      ↓
+    Main Query
+
+More accurately, when CTEs are independent:
+
+sales.orders
+    ├──> cte_totalsales ──┐
+    │                     │
+    └──> cte_lastorders ──┼──> Main Query
+                          │
+sales.customers ──────────┘
+
+Key point
+Multiple CTEs are useful when different calculations need to be performed separately and then combined in the main query.
+
+Nested / Dependent CTE
+A nested or dependent CTE is a CTE that uses the result of another CTE.
+
+Therefore, the second CTE depends on the first CTE.
+
+Example:
+
+WITH cte_totalsales AS
+(
+    SELECT
+        customerid,
+        SUM(Sales) AS totalsales
+    FROM sales.orders
+    GROUP BY customerid
+),
+cte_highsales AS
+(
+    SELECT
+        customerid,
+        totalsales
+    FROM cte_totalsales
+    WHERE totalsales > 10000
+)
+SELECT *
+FROM cte_highsales;
+
+Here:
+
+sales.orders
+     ↓
+cte_totalsales
+     ↓
+cte_highsales
+     ↓
+Main Query
+
+cte_highsales cannot be understood independently, because it uses cte_totalsales.
+
+Difference
+Standalone CTE:
+
+Table → CTE → Main Query
+
+Dependent/Nested CTE:
+
+Table → CTE 1 → CTE 2 → Main Query
+
+Multiple vs Nested CTE
+These two concepts are easy to confuse.
+
+Multiple independent CTEs
+WITH cte1 AS
+(
+    SELECT ...
+    FROM table1
+),
+cte2 AS
+(
+    SELECT ...
+    FROM table2
+)
+SELECT ...
+FROM cte1
+JOIN cte2 ...
+
+Here, cte2 does not depend on cte1.
+
+table1 → CTE1 ──┐
+                ├──> Main Query
+table2 → CTE2 ──┘
+
+Dependent CTEs
+WITH cte1 AS
+(
+    SELECT ...
+    FROM table1
+),
+cte2 AS
+(
+    SELECT ...
+    FROM cte1
+)
+SELECT ...
+FROM cte2;
+
+Here, cte2 uses cte1.
+
+table1 → CTE1 → CTE2 → Main Query
+
+CTE vs Temporary Table
+A CTE is a temporary query result, not a permanent database object.
+
+CTE	Temporary Table
+Exists for one statement	Can exist for a session/transaction depending on DB
+Defined using WITH	Created using CREATE TEMP TABLE / similar
+Mainly for query organization	Useful for storing/intermediate processing
+No need to explicitly drop	May need to be dropped automatically/explicitly depending on DB
+Great for readable queries	Useful when intermediate data needs to be reused across statements
+
+Important CTE Syntax
+WITH cte1 AS
+(
+    SELECT ...
+),
+cte2 AS
+(
+    SELECT ...
+)
+SELECT ...
+FROM cte1
+JOIN cte2
+    ON ...;
+
+Remember:
+
+WITH starts the CTE section.
+
+Each CTE has a name.
+
+The query goes inside parentheses.
+
+Multiple CTEs are separated by commas.
+
+The final SELECT is the main query.
+
+A CTE can be referenced by the main query.
+
+A later CTE can reference an earlier CTE.
+
+A recursive CTE can reference itself.
+
+Quick Revision Notes
+CTE = Common Table Expression
+
+CTE
+ ↓
+Temporary named result set
+ ↓
+Exists only for one SQL statement
+
+Main advantages
+Reduce redundancy
+Improve readability
+Improve modularity
+Break complex queries into steps
+
+Types
+CTE
+│
+├── Non-Recursive
+│   ├── Standalone
+│   ├── Multiple CTEs
+│   └── Nested / Dependent CTE
+│
+└── Recursive
+
+Most important distinction
+Standalone:
+Table → CTE → Main Query
+
+Multiple Independent:
+Table → CTE1 ──┐
+Table → CTE2 ──┼→ Main Query
+
+Nested/Dependent:
+Table → CTE1 → CTE2 → Main Query
+
+One-line definition to remember for interviews:
+
+A CTE is a temporary named result set defined using WITH, used to simplify and organize a complex SQL query.
