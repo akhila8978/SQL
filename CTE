@@ -367,3 +367,95 @@ Table → CTE1 → CTE2 → Main Query
 One-line definition to remember for interviews:
 
 A CTE is a temporary named result set defined using WITH, used to simplify and organize a complex SQL query.
+
+
+--CTE--
+Common Table Expression : Temporary, named reult set(virtual table), that can be used multiple times within your query to simplify and organize complex query. 
+
+to reduce redundancy
+to readability
+for modularity 
+
+
+cte types:
+1  none recurisve cte
+  >> standalone
+  >> nested cte
+2 Recursive cte
+
+---standalone cte:
+
+defined and used independently.Runs independently as itself-contained and doesnt rely on other ctes or quereis.
+
+DB >> CTE >>. Intermediate resut <<<  >> main query>>> result
+
+ with cte-name as (select from where ) ...cte query
+ (select---from cte-name where )>>> main query cte usage 
+
+
+ 1 find the total sales per customer 
+
+ select customerid ,  sum(Sales)as toatalsales from sales.orders group by customerid;
+  
+using cte :
+
+ with cte_totalsales as (
+   select customerid ,sum(Sales)as totalsales from sales.orders group by customerid
+)
+ select c.customerid,c.firstname,c.lastname,cts.totalsales from sales.customers c left join cte_totalsales cts on  cts.customerid = c.customerid;
+
+ note : orderby cannot used in subquerys views and cte can  use in main query
+
+ ---Multiple ctes---
+
+ with cte-name1 as ( select from where),
+
+ cte-name2 as (select from where ),
+
+ main query selct from cte-name1 jpin cte-name2
+  where---
+
+task : 
+
+1 find the total sales per customer
+2 find the last order date per each customer
+
+
+ with cte_totalsales as (
+   select customerid ,sum(Sales)as totalsales from sales.orders group by customerid
+),
+Cte_lastorders as(select customerid , max(orderdate)as last_order from sales.orders group by customerid)
+ select c.customerid,c.firstname,c.lastname,cts.totalsales,clo.last_order from sales.customers c left join cte_totalsales cts on  cts.customerid = c.customerid left join cte_lastorders clo on clo.customerid = c.customerid
+
+ --nested cte---
+ 
+ cte inside anothjer cte
+ a nested cte uses the result of another cte, so it cant run independently.
+
+
+ with cte_name1 as (select from where ),
+ cte-name2 as (select from cte-name1 where)
+
+ main query (select from cte-name2 where )
+
+  task 1: rank the customers based on the total sales per customer
+
+
+  with cte_totalsales as (
+   select customerid ,sum(Sales)as totalsales from sales.orders group by customerid
+),
+----step 2: find the last order date for each customer ---standalone cte
+Cte_lastorders as(select customerid , max(orderdate)as last_order from sales.orders group by customerid),
+
+step3 : rank customers based on the totalsales per customers---
+
+cte_customer_rank as(select customerid, Totalsales,Rank() over( order by totalsales desc) customer_rank from cte_totalsales)
+
+ --main query--
+ select c.customerid,c.firstname,c.lastname,cts.totalsales,clo.last_order from sales.customers c left join cte_totalsales cts on  cts.customerid = c.customerid left join cte_lastorders clo on clo.customerid = c.customerid
+
+
+
+
+
+
