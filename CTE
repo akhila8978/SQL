@@ -445,6 +445,11 @@ cte_customer_rank as(select customerid, Totalsales,Rank() over( order by totalsa
 
 
 
+----NESTED CTE-----
+a cte inside another cte a nested cte uses the ressult of another cte so it cant run independently.
 
 
+DB >>>> cte (standalone)>>> intermediate >> cte 2>> intermediate (final(nested cte)) > main query >> final
 
+with cte-name1 as(slect from where ),
+cte -name2 as (select 
