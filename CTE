@@ -24,6 +24,8 @@ SELECT ...
 FROM cte_name
 WHERE ...;
 
+
+
 Think of it as:
 
 Database
@@ -36,34 +38,23 @@ Main Query
    ↓
  Final Result
 
-Types of CTEs
-There are two main categories:
+>>>> Types of CTEs
+      There are two main categories:
 
-Non-Recursive CTE
-
-Standalone CTE
-
-Nested/Dependent CTE
-
-Multiple CTEs
-
-Recursive CTE
+> Non-Recursive CTE
+> Standalone CTE
+> Nested/Dependent CTE
+> Multiple CTEs
+> Recursive CTE
 
 1. Non-Recursive CTE
 A non-recursive CTE does not refer to itself.
-
 It can be:
+1 Standalone
+2 Nested/dependent
 
-Standalone
-
-Nested/dependent
-
-Multiple CTEs used together
-
-Standalone CTE
-A standalone CTE is independent.
-
-It does not depend on another CTE.
+>>>  Multiple CTEs used together
+Standalone CTE : A standalone CTE is independent.It does not depend on another CTE.
 
 Example
 Task: Find total sales per customer.
@@ -108,7 +99,7 @@ customerid | totalsales
 
 Then the main query uses that result and joins it with sales.customers.
 
-Important point
+***** Important point
 A CTE is not a permanent table.
 
 It exists only while the query is executing.
@@ -236,13 +227,11 @@ Main Query
 cte_highsales cannot be understood independently, because it uses cte_totalsales.
 
 Difference
-Standalone CTE:
+Standalone CTE:   Table → CTE → Main Query
 
-Table → CTE → Main Query
+Dependent/Nested CTE:  Table → CTE 1 → CTE 2 → Main Query
 
-Dependent/Nested CTE:
 
-Table → CTE 1 → CTE 2 → Main Query
 
 Multiple vs Nested CTE
 These two concepts are easy to confuse.
