@@ -1,1 +1,229 @@
+SQL Server – Views (Complete Notes)
+Your understanding is correct! A View is a virtual table that displays data from one or more tables without storing the actual result data physically.
+
+Let's understand it from a SQL Server developer's perspective.
+1. SQL Server database hierarchy
+Your diagram is almost correct. Here is the proper hierarchy:
+SQL Server Instance
+
+Database 1
+
+
+Database 2
+
+
+
+Schema (e.g. dbo)
+
+Table
+
+Rows + Columns
+
+Stores actual data
+
+
+View
+
+Virtual table
+
+Stores SQL definition
+
+
+
+
+Important correction:
+- A table physically stores data in rows and columns.
+- A normal view stores the SQL query definition, not the result data.
+- A view can contain columns from one or multiple tables.
+- A view can have joins, filters, aggregations and calculations.
+2. What is a View?
+A View is a database object created using a SELECT statement.
+
+Whenever we query a normal view, SQL Server executes its underlying query and returns the latest available data from the underlying tables.
+
+Example:
+
+Suppose we have an Employee table.
+
+Employee Table
+EmpID	EmpName	Salary	Department
+101	Akhil	40000	IT
+102	Ravi	50000	HR
+103	Priya	60000	IT
+104	Rahul	45000	Finance
+
+Now, the business wants to see only IT employees.
+
+Instead of writing the same query repeatedly, we can create a view.
+3. How to create a View
+Syntax:
+CREATE VIEW ViewName
+AS
+SELECT column1, column2
+FROM TableName
+WHERE condition;
+
+
+Practical example:
+CREATE VIEW vw_ITEmployees
+AS
+SELECT
+    EmpID,
+    EmpName,
+    Salary
+FROM Employee
+WHERE Department = 'IT';
+
+
+Now execute:
+SELECT *
+FROM vw_ITEmployees;
+
+
+Output:
+EmpID	EmpName	Salary
+101	Akhil	40000
+103	Priya	60000
+
+Notice that we are not directly querying the Employee table. We are querying the view.
+4. Types of Views in SQL Server
+There are different types of views.
+A. Simple View
+A simple view is created using a single table.
+CREATE VIEW vw_Employee
+AS
+SELECT EmpID, EmpName, Salary
+FROM Employee;
+
+
+Characteristics:
+- Uses a single table.
+- Usually does not contain joins or aggregate functions.
+- Can support INSERT, UPDATE and DELETE, subject to SQL Server's view modification rules.
+B. Complex View
+A complex view is created using multiple tables, joins, aggregate functions or grouping.
+
+Suppose we have:
+
+Employee Table
+EmpID	EmpName	DeptID
+101	Akhil	1
+102	Ravi	2
+
+Department Table
+DeptID	DeptName
+1	IT
+2	HR
+
+Create a view:
+CREATE VIEW vw_EmployeeDepartment
+AS
+SELECT
+    E.EmpID,
+    E.EmpName,
+    D.DeptName
+FROM Employee E
+INNER JOIN Department D
+    ON E.DeptID = D.DeptID;
+
+
+Execute:
+SELECT *
+FROM vw_EmployeeDepartment;
+
+
+Output:
+EmpID	EmpName	DeptName
+101	Akhil	IT
+102	Ravi	HR
+
+C. Indexed View (Materialized View)
+This is an important interview topic.
+
+A normal view does not physically store its result data. However, an Indexed View physically stores its result through a unique clustered index.
+
+Benefits:
+- Can improve query performance for certain complex queries.
+- Stores precomputed results.
+- Useful for some aggregation-heavy workloads.
+Example:
+CREATE VIEW dbo.vw_DeptSalary
+WITH SCHEMABINDING
+AS
+SELECT
+    DeptID,
+    COUNT_BIG(*) AS TotalEmployees,
+    SUM(Salary) AS TotalSalary
+FROM dbo.Employee
+GROUP BY DeptID;
+
+
+To create its first index:
+CREATE UNIQUE CLUSTERED INDEX IX_DeptSalary
+ON dbo.vw_DeptSalary(DeptID);
+
+
+Note: Indexed views have several restrictions, including schema binding, deterministic expressions and specific SET options.
+5. Advantages of Views
+Advantage	Explanation
+Security	Restrict access to selected columns or rows
+Reusability	Avoid writing the same complex query repeatedly
+Simplification	Hide complex joins and business logic
+Data abstraction	Users see required data without knowing the underlying structure
+Maintainability	Centralize commonly used query definitions
+
+Real-time example:
+
+Suppose the HR team should see employee names and departments but should not see salaries.
+
+We can create:
+CREATE VIEW vw_HREmployees
+AS
+SELECT
+    EmpID,
+    EmpName,
+    Department
+FROM Employee;
+
+
+Grant access to the view rather than the underlying table, and ensure the user does not have another permission path to access the salary column.
+
+6. Limitations of Views
+1. Normal views do not store result data.
+2. Complex views can be slow if their underlying queries are expensive.
+3. Some views cannot be directly updated.
+4. A view does not automatically improve query performance.
+5. If underlying tables or columns change, dependent views may need modification or refresh.
+
+
+7. Important SQL Server View Operations
+Create a view
+CREATE VIEW vw_Employee
+AS
+SELECT * FROM Employee;
+
+
+Modify an existing view
+ALTER VIEW vw_Employee
+AS
+SELECT EmpID, EmpName
+FROM Employee;
+
+
+Delete a view
+DROP VIEW vw_Employee;
+
+
+See the view definition
+sp_helptext 'vw_Employee';
+
+
+>>>Rename a view
+EXEC sp_rename
+    'vw_Employee',
+    'vw_EmployeeDetails';
+
+
+Prefer ALTER VIEW when modifying a view. Be careful when renaming database objects because dependent objects and application references may not update automatically.
+
 
